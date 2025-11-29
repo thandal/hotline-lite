@@ -86,6 +86,9 @@ twilio api:taskrouter:v1:workspaces:workflows:update --workspace-sid $WORKSPACE_
         --task-reservation-timeout 20 \
         --configuration "{\"task_routing\":{\"filters\":[{\"filter_friendly_name\":\"SimpleFilter\",\"expression\":\"1==1\",\"targets\":[{\"queue\":\"$QUEUE_SID\",\"expression\":\"task.language IN worker.languages\"},{\"queue\":\"$QUEUE_SID\",\"order_by\":\"worker.tier ASC\"}]}],\"default_filter\":{\"queue\":\"$QUEUE_SID\"}}}"
 
+echo "Configuring the task queue max-reserved-workers"
+twilio api:taskrouter:v1:workspaces:task-queues:update --workspace-sid $WORKSPACE_SID --sid $QUEUE_SID --max-reserved-workers=5
+
 echo "Updating twilio-hotline/.env..."
 echo "HOTLINE_PHONE_NUMBER=\"$PHONE_NUMBER\"" > twilio-hotline/.env
 echo "WORKSPACE_SID=\"$WORKSPACE_SID\"" >> twilio-hotline/.env
