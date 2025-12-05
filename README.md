@@ -1,19 +1,19 @@
 # Preparation
 
 * Create a twilio account: https://twilio.com
-* Get a phone number: https://console.twilio.com/us1/develop/phone-numbers/manage/incoming
+  * Make a note of your twilio account SID and auth token
+  * (Optional) Get a phone number: https://console.twilio.com/us1/develop/phone-numbers/manage/incoming
+* Create a shift calendar for hotline operators
+  * Make a note of the url to the .ics feed
+  * _[Tuta](https://tuta.com/calendar) is a free, secure option if you prefer not to use Google_
+* Collect the phone numbers, aliases, and working languages of your operator team
 
 # Setup
 
-1. Install twilio CLI: see https://www.twilio.com/docs/twilio-cli/getting-started/install
-2. Install the Serverless Toolkit
-  `twilio plugins:install @twilio-labs/plugin-serverless`
-3. Log in
-  `twilio login`
-4. Set profile
-  `twilio profiles:use YOUR_PROFILE_NAME`
-5. Run the setup script
-  `./setup_hotline.sh`
+1. Install twilio CLI: https://www.twilio.com/docs/twilio-cli/getting-started/install
+2. Install github CLI: See https://github.com/cli/cli#installation
+3. Clone this repo: `gh repo clone thandal/hotline-lite`
+4. Run the setup script: `./setup_hotline.sh`
 
 # Operation
 
