@@ -1,0 +1,34 @@
+{
+    "task_routing": {
+        "filters": [
+            {
+                "filter_friendly_name": "TieredFilter",
+                "expression": "1==1",
+                "targets": [
+                    {
+                        "queue": "QUEUE_SID",
+                        "expression": "(task.language IN worker.languages) AND (worker.tier == 1)",
+                        "skip_if": "workers.available == 0",
+                        "timeout": 20,
+                        "order_by": "worker.tier ASC"
+                    },
+                    {
+                        "queue": "QUEUE_SID",
+                        "order_by": "worker.tier ASC",
+                        "expression": "(task.language IN worker.languages) AND (worker.tier > 1)",
+                        "skip_if": "workers.available == 0",
+                        "timeout": 20
+                    },
+                    {
+                        "queue": "QUEUE_SID",
+                        "expression": "task.language IN worker.languages",
+                        "order_by": "worker.tier ASC"
+                    }
+                ]
+            }
+        ],
+        "default_filter": {
+            "queue": "QUEUE_SID"
+        }
+    }
+}
