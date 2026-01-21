@@ -18,34 +18,41 @@
 # Operation
 
 ## Caller Experience
-When a Caller reaches the hotline, they will be greeted in various languages and asked to select their desired language by pressing  a number.
-They will then be placed in a wait queue while the system finds an available operator. They will periodically hear updates while waiting.
+When a Caller reaches the hotline, they will be greeted in various languages and asked to select their desired language by pressing a number.
+They will then be placed in a wait queue while the system finds an available operator.
+They will periodically hear updates while waiting.
 
 ## Operator Experience
-Operators (called Workers in the Twilio task scheduling system) will receive a call from the hotline number, and hear the incoming Call number.
-They will then have the Pre-Call options to press a number to
-  * Repeat the incoming Call number
-  * Accept the Call
-Or they can just hang up (or wait a few seconds) and the Call will be rejected, and returned to the queue to find another Operator.
+Operators (called Workers in the Twilio task scheduling system) will receive a call from the hotline number.
+They will then have the Pre-Call options to press a number to accept the Call.
+If they do not, the Call will be rejected and returned to the queue to find another Operator.
 
 Once a Caller and Operator are connected, they can talk!
 
 When the Caller hangs up, or the Operator presses *, the Operator will have the Post-Call options to
-  * Repeat the Call number
-  * Add the Call to the Blocklist
+  * Hear the Caller's number
+  * Add the Caller's number to the blocklist
   * Call the Caller back
 
 Once the Operator hangs up, the Call is completed, and the Operator may receive the next Call.
 
 ## Worker Schedule
-You can update available workers by
-  * directly editing active_workers.jsonl, OR
-  * setting up a .env file (see .env.sample)
-  * running `set -a; source .env; set +a`
-  * running `./calendar_to_jsonl.py`, THEN
-  * running `./update_twilio_workers.sh`
+Workers set (or are given) shifts on the hotline using a shared calendar.
+Google and Tuta are two free options, but it doesn't matter what platform you use.
+Workers may identify themselves using whatever name they wish, but it should correspond to a name that is linked to their number in the Worker Registry.
+They do not need to list their phone number in the calendar.
 
-You can run this in a (~hourly) loop or cron job on your local machine
+Operators can sign up to be a backup operator by putting the word "backup" or "secondary" in the event location field for their shift.
+
+Operator shift registries are stored securely in Twilio Serverless environment variables.
+
+## Worker Registry
+The setup script will help you create and update your registry of workers/operators. You can also manually manage worker registries using `./manage_worker_registry.sh`.
+  * Run `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY>` to view the current worker registries
+  * Add a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --add <attributes>`
+  * Update a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --update <ZVZZZ> <attributes>`
+  * Remove a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --remove <ZVZZZ or worker_friendly_name>`
+  * Process a batch action by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --remove --file <operators.jsonl>`
 
 ## Blocklist
 You can manually set a blocklist, or the operators can choose to add a number to the blocklist at the end of the call
@@ -54,10 +61,11 @@ You can manage the blocklist by
   * creating a text file with a single line list of numbers, formated as +18882225555,+16663339999
   * uploading this list by running `./manage_blocklist.sh --update myfile.txt`
 
-# Signal Integration
-  * Run `./setup_signal_presage.sh` and follow the instructions!
-  * TODO: configure .env with PRESAGE_PASSPHRASE and GROUP_KEY
-  * Redeploy `twilio serverless:deploy`
+## Cost
+
+The hotline has been developed by volunteers. However, it is not free to run.
+Deploying and operating this hotline will cost you $1 per month + ~$0.02 per inbound minute.
+These fees are managed by and payable to Twilio.
 
 # Overview diagram
 
@@ -92,7 +100,14 @@ Remove a function:
 `twilio api:serverless:v1:services:functions:remove --service-sid BLAH --sid FUNTION_BLAH`
 
 
-# TODOS
+# To-do
 
- - Allow operators to place outbound calls.
- - Instructions for how to configure a github action to update worker availability.
+ - [ ] Deliver messages left by callers to the operator group
+   - Currently in development on the [`messaging` branch](https://github.com/vozcalida/hotline/tree/messaging)
+   - The current approach integrates with Signal at significant added complexity, including dependence on an external server. Using [Delta Chat](https://delta.chat) would be another approach that might reduce complexity, increase feature potential, and maintain a high level of security/privacy. See examples of Delta Chat bots in [NodeJS (basic implementation)](https://github.com/deltachat-bot/echo/blob/main/nodejs_stdio_jsonrpc/Readme.md) and that [allow a team to respond as a group to outside queries](https://github.com/deltachat-bot/team-bot).
+ - [ ] Handle incoming text messages
+ - [ ] Allow operators to place outbound calls? 
+   - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
+ - [ ] Create a web interface for management of the operator lists, blocklists, and other config
+   - See [this example](https://github.com/twilio-labs/function-templates/tree/main/sip-quickstart) of an admin panel built on Twilio's Serverless infrastructure
+ - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU
