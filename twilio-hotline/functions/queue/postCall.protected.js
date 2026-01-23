@@ -10,7 +10,7 @@ exports.handler = async function (context, event, callback) {
         .reservations(event.reservationSid)
         .fetch();
     console.log("postCall reservationStatus " + reservation.reservationStatus);
-    if (reservation.reservationStatus !== 'completed') {
+    if (reservation.reservationStatus != 'completed') {
       twiml.say("Call reservation failed with status " + reservation.reservationStatus);
     }
     const gather = twiml.gather({ numDigits: 1 });

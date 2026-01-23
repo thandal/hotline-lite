@@ -26,7 +26,7 @@ exports.handler = function (context, event, callback) {
     // After the call, we pop back here.
     twiml.redirect("/queue/postCall?" +
       "taskSid=" + event.taskSid +
-      "reservationSid=" + event.reservationSid +
+      "&reservationSid=" + event.reservationSid +
       "&callerFrom=" + encodeURIComponent(event.callerFrom) +
       "&language=" + event.language);
   }
