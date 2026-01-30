@@ -1,3 +1,10 @@
+# Hotline-lite
+
+A simple, privacy-first Twilio-based hotline. Key features
+* easy pseudononymous operator management
+* multilingual support
+* [ALPHA] Signal notifications
+
 # Preparation
 
 * Create a twilio account: https://twilio.com
