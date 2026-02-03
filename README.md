@@ -110,8 +110,7 @@ Remove a function:
 # To-do
 
  - [ ] Deliver messages left by callers to the operator group
-   - Currently in development on the [`messaging` branch](https://github.com/vozcalida/hotline/tree/messaging)
-   - The current approach integrates with Signal at significant added complexity, including dependence on an external server. Using [Delta Chat](https://delta.chat) would be another approach that might reduce complexity, increase feature potential, and maintain a high level of security/privacy. See examples of Delta Chat bots in [NodeJS (basic implementation)](https://github.com/deltachat-bot/echo/blob/main/nodejs_stdio_jsonrpc/Readme.md) and that [allow a team to respond as a group to outside queries](https://github.com/deltachat-bot/team-bot).
+   - The current approach integrates with Signal, via the presage-cli, and relies on access to a remote database (because twilio serverless doesn't support cloud storage). All this is more complex than we'd like!
  - [ ] Handle incoming text messages
  - [ ] Allow operators to place outbound calls? 
    - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
