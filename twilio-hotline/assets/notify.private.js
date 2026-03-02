@@ -31,7 +31,7 @@ const notify = async function (context, message, attachment_path=null) {
   //const ld = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2";  // Local (dev)
   const ld = "/bin/ld.so";  // Production (deployed to Twilio)
   const cmd = ld + " " + Runtime.getAssets()['/presage-cli.bin'].path + " --sqlite-db-path " + tmp_db_path + " --passphrase " + context.PRESAGE_PASSPHRASE;
-  const sync_stdout = child_process.execSync(cmd + " sync --stop-after-empty_queue");
+  const sync_stdout = child_process.execSync(cmd + " sync --stop-after-empty-queue");
   //console.log(sync_stdout.toString());
   if (attachment_path) {
     const send_stdout = child_process.execSync(cmd + " send-to-group --master-key " + context.GROUP_KEY + " --message '" + message + "' --attach " + attachment_path);
