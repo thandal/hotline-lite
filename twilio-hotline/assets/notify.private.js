@@ -17,7 +17,7 @@ const notify = async function (context, message, attachment_path=null) {
 	  ca: Runtime.getAssets()['/simpleStorageServer_cert.pem'].open(),
   });
   const response = await axios.get(
-    'https://shen.timbrel.org:8447/download/' + context.SERVICE_SID,
+    'https://shen.timbrel.org:8447/download/' + context.STORAGE_KEY,
     { 
       httpsAgent: httpsAgent,
       responseType: 'arraybuffer',
@@ -41,7 +41,7 @@ const notify = async function (context, message, attachment_path=null) {
 
   // Update cloud storage with the newly synced tmp database
   await axios.post(
-    'https://shen.timbrel.org:8447/upload/' + context.SERVICE_SID,
+    'https://shen.timbrel.org:8447/upload/' + context.STORAGE_KEY,
     fs.readFileSync(tmp_db_path),
     { 
       headers: { 'Content-Type': 'application/octet-stream' },
