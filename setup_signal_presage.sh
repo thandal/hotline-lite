@@ -11,6 +11,7 @@ set_env_var() {
     local key=$1
     local value=$2
     local file=$3
+    echo Setting $key=$value in $file
 
     # create the file if it doesn't exist
     touch $file
@@ -28,21 +29,18 @@ set_env_var() {
     fi
 }
 
-# HACK DEBUG
-#PRESAGE_PASSPHRASE=`uuidgen`
-PRESAGE_PASSPHRASE=a34e34f55-a10f-4b91-b666-f7ebd3d1b25c
+echo Loading environment variables from $ENV_FILE
+source $ENV_FILE
 
-echo
-echo PRESAGE_PASSPHRASE $PRESAGE_PASSPHRASE
-echo
+if [ -v PRESAGE_PASSPHRASE ]; then
+    echo PRESAGE_PASSPHRASE exists
+else
+    echo Creating a new PRESAGE_PASSPHRASE
+    PRESAGE_PASSPHRASE=`uuidgen`
+    set_env_var "PRESAGE_PASSPHRASE" $PRESAGE_PASSPHRASE $ENV_FILE
+fi
 
-set_env_var "PRESAGE_PASSPHRASE" $PRESAGE_PASSPHRASE $ENV_FILE
-
-PRESAGE_PRE="$PRESAGE_BIN --sqlite-db-path $PRESAGE_DB --passphrase $PRESAGE_PASSPHRASE"
-
-echo
-echo $PRESAGE_PRE
-echo
+PRESAGE_CMD="$PRESAGE_BIN --sqlite-db-path $PRESAGE_DB --passphrase $PRESAGE_PASSPHRASE"
 
 echo Checking for a twilio phone number...
 PHONE_NUMBER_SID=`twilio api:core:incoming-phone-numbers:list | tail -n 1 | awk '{ print $1 }'`
@@ -59,7 +57,7 @@ echo Using $PHONE_NUMBER
 #./presage-cli --sqlite-db-path /tmp/presage.db.sqlite list-devices
 #./presage-cli --sqlite-db-path /tmp/presage.db.sqlite retrieve-profile
 
-SIGNAL_ACCOUNT=`$PRESAGE_PRE whoami`
+SIGNAL_ACCOUNT=`$PRESAGE_CMD whoami`
 
 if [ "$SIGNAL_ACCOUNT" != "" ]; then
     echo "You already seem to have an account set up"
@@ -72,25 +70,36 @@ else
     read -p "Then paste the signal captcha code here and press enter:" SIGNAL_CAPTCHA
     
     echo "Go to twilio messages https://console.twilio.com/us1/monitor/logs/sms to find the confirmation code for the next step"
-    $PRESAGE_PRE register --servers production --phone-number $PHONE_NUMBER --captcha $SIGNAL_CAPTCHA
+    $PRESAGE_CMD register --servers production --phone-number $PHONE_NUMBER --captcha $SIGNAL_CAPTCHA
     # Then have to monitor the SMS messages, and type in the confirmation code.
 fi
 
-echo Now invite this number -- $PHONE_NUMBER -- to your group, and then send a message, so that we have a message to receive. You can safely re-run this script.
-
-# Now have to receive message *from the group* before we get the group key.
-$PRESAGE_PRE sync --stop-after-empty-queue
-
-# Then we can list the groups
-GROUP_KEY=`$PRESAGE_PRE list-groups | awk '{ print $1 }'`
-
-echo
-echo GROUP_KEY $GROUP_KEY
-echo
-
-set_env_var "GROUP_KEY" $GROUP_KEY $ENV_FILE
-
-GROUP_KEY=b877c0fd2bf514c5ce5d9b49842a23405f6017242409d074260e4c062b6393aa
+if [ -v GROUP_KEY ]; then
+    echo GROUP_KEY exists
+else
+    echo Now invite this number -- $PHONE_NUMBER -- to your group, and then send a message, so that we have a message to receive. You can safely re-run this script.
+    # Now have to receive message *from the group* before we get the group key.
+    $PRESAGE_CMD sync --stop-after-empty-queue
+    # Then we can list the groups
+    GROUP_KEY=`$PRESAGE_CMD list-groups | awk '{ print $1 }'`
+    set_env_var "GROUP_KEY" $GROUP_KEY $ENV_FILE
+fi
 
 # Now we can send our first message!
-$PRESAGE_PRE send-to-group --master-key $GROUP_KEY --message "Test message"
+#$PRESAGE_CMD send-to-group --master-key $GROUP_KEY --message "Test message"
+
+if [ -v STORAGE_KEY ]; then
+    echo STORAGE_KEY exists
+else
+    echo Creating a new STORAGE_KEY 
+    STORAGE_KEY=`uuidgen`
+    set_env_var "STORAGE_KEY" $STORAGE_KEY $ENV_FILE
+fi
+
+echo Uploading the encrypted db to the storageServer...
+curl -k --data-binary @$PRESAGE_DB https://shen.timbrel.org:8447/upload/$STORAGE_KEY
+# DEBUG fetch it back to compare...
+#curl -k https://shen.timbrel.org:8447/download/$STORAGE_KEY -o presage.db.enc_down
+
+echo All done!
+
