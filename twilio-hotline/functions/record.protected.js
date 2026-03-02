@@ -11,8 +11,7 @@ exports.handler = async function (context, event, callback) {
     );
     twiml.record({
       finishOnKey: '*#',
-      // TODO: enabled this when voicemail notification is implemented
-      //recordingStatusCallback: '/recordingStatusCallback?callerFrom=' + encodeURIComponent(event.callerFrom),
+      recordingStatusCallback: '/recordingStatusCallback?callerFrom=' + encodeURIComponent(event.callerFrom),
       });
   }
   twiml.hangup();
