@@ -108,7 +108,7 @@ Remove a function:
 
 # To-do
 
- - [ ] Deliver messages left by callers to the operator group
+ - [X] Deliver voicemail messages left by callers to the operator group
    - The current approach integrates with Signal, via the presage-cli, and relies on access to a remote database (because twilio serverless doesn't support cloud storage). All this is more complex than we'd like!
  - [ ] Handle incoming text messages
  - [ ] Allow operators to place outbound calls? 
