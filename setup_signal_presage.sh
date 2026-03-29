@@ -40,6 +40,16 @@ else
     set_env_var "PRESAGE_PASSPHRASE" $PRESAGE_PASSPHRASE $ENV_FILE
 fi
 
+if [ -v STORAGE_KEY ]; then
+    echo STORAGE_KEY exists
+    echo Downloading database...
+    curl -k https://shen.timbrel.org:8447/download/$STORAGE_KEY -o $PRESAGE_DB
+else
+    echo Creating a new STORAGE_KEY 
+    STORAGE_KEY=`uuidgen`
+    set_env_var "STORAGE_KEY" $STORAGE_KEY $ENV_FILE
+fi
+
 PRESAGE_CMD="$PRESAGE_BIN --sqlite-db-path $PRESAGE_DB --passphrase $PRESAGE_PASSPHRASE"
 
 echo Checking for a twilio phone number...
@@ -69,37 +79,35 @@ else
     echo Once you have solved the captcha, don\'t open Signal. Right click on the "Open Signal" link and copy the link.
     read -p "Then paste the signal captcha code here and press enter:" SIGNAL_CAPTCHA
     
-    echo "Go to twilio messages https://console.twilio.com/us1/monitor/logs/sms to find the confirmation code for the next step"
+    echo Go to twilio messages https://console.twilio.com/us1/monitor/logs/sms to find the confirmation code for the next step
+    echo Or use 'twilio api:core:messages:list --properties=direction,dateSent,body --limit=1' to check for new messages -- make sure you get the latest one!
     $PRESAGE_CMD register --servers production --phone-number $PHONE_NUMBER --captcha $SIGNAL_CAPTCHA
-    # Then have to monitor the SMS messages, and type in the confirmation code.
 fi
+
+# Have to receive a message *from the group* before we get the group key.
+echo Syncing...
+$PRESAGE_CMD sync --stop-after-empty-queue
+
+echo List of current groups
+$PRESAGE_CMD list-groups 
 
 if [ -v GROUP_KEY ]; then
     echo GROUP_KEY exists
 else
     echo Now invite this number -- $PHONE_NUMBER -- to your group, and then send a message, so that we have a message to receive. You can safely re-run this script.
-    # Now have to receive message *from the group* before we get the group key.
-    $PRESAGE_CMD sync --stop-after-empty-queue
     # Then we can list the groups
     GROUP_KEY=`$PRESAGE_CMD list-groups | awk '{ print $1 }'`
     set_env_var "GROUP_KEY" $GROUP_KEY $ENV_FILE
-fi
-
-# Now we can send our first message!
-#$PRESAGE_CMD send-to-group --master-key $GROUP_KEY --message "Test message"
-
-if [ -v STORAGE_KEY ]; then
-    echo STORAGE_KEY exists
-else
-    echo Creating a new STORAGE_KEY 
-    STORAGE_KEY=`uuidgen`
-    set_env_var "STORAGE_KEY" $STORAGE_KEY $ENV_FILE
 fi
 
 echo Uploading the encrypted db to the storageServer...
 curl -k --data-binary @$PRESAGE_DB https://shen.timbrel.org:8447/upload/$STORAGE_KEY
 # DEBUG fetch it back to compare...
 #curl -k https://shen.timbrel.org:8447/download/$STORAGE_KEY -o presage.db.enc_down
+
+# Now we can send our first message!
+echo Sending a test message...
+$PRESAGE_CMD send-to-group --master-key $GROUP_KEY --message "Test message"
 
 echo All done!
 
