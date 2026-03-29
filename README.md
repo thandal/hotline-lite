@@ -1,8 +1,9 @@
 # Hotline-lite
 
 A simple, privacy-first Twilio-based hotline. Key features
-* easy pseudononymous operator management
+* easy pseudonymous operator management
 * multilingual support
+* web-based admin interface for managing operators, blocklists, and languages
 * [ALPHA] Signal notifications
 
 # Preparation
@@ -60,8 +61,20 @@ The setup script will help you create and update your registry of workers/operat
   * Remove a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --remove <ZVZZZ or worker_friendly_name>`
   * Process a batch action by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --remove --file <operators.jsonl>`
 
+## Admin Interface
+The hotline includes a password-protected web admin interface for managing operators, blocklists, and supported languages. After deployment, access it at your Twilio Serverless URL's `/admin` endpoint.
+
+The admin password is set during initial setup (via `ADMIN_PASSWORD` in the environment variables). Authentication uses HMAC-SHA1 tokens stored in the browser's session storage.
+
+From the admin dashboard you can:
+  * **Operators** -- View, add, edit, and remove operators (with name, phone number, and language support)
+  * **Blocklist** -- Add or remove blocked phone numbers
+  * **Languages** -- Add or remove supported languages for the caller greeting
+
+All data is stored securely in Twilio Serverless environment variables.
+
 ## Blocklist
-You can manually set a blocklist, or the operators can choose to add a number to the blocklist at the end of the call
+You can also manually set a blocklist, or the operators can choose to add a number to the blocklist at the end of the call
 You can manage the blocklist by
   * running `./manage_blocklist.sh` to view the current state of the blocklist
   * creating a text file with a single line list of numbers, formated as +18882225555,+16663339999
@@ -113,6 +126,5 @@ Remove a function:
  - [ ] Handle incoming text messages
  - [ ] Allow operators to place outbound calls? 
    - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
- - [ ] Create a web interface for management of the operator lists, blocklists, and other config
-   - See [this example](https://github.com/twilio-labs/function-templates/tree/main/sip-quickstart) of an admin panel built on Twilio's Serverless infrastructure
+ - [X] Create a web interface for management of the operator lists, blocklists, and other config
  - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU
