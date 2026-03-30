@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 16px;
+    }
+
+    input {
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      background: #2563eb;
+      color: #fff;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #login {
+      max-width: 320px;
+      margin: 80px auto;
+      background: #fff;
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    #login input {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    #login button {
+      width: 100%;
+    }
+
+    .err {
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      background: #fef2f2;
+      color: #dc2626;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="login">
+    <h1>Admin</h1>
+    <div id="loginErr" class="err"></div>
+    <input type="password" id="pw" placeholder="Password" autofocus>
+    <button onclick="doLogin()">Log In</button>
+  </div>
+
+  <div id="dash"></div>
+
+  <script>
+    var T = '', S = '';
+
+    function post(body) {
+      return fetch('/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ token: T, salt: S }, body))
+      }).then(function (r) {
+        return r.json().then(function (d) {
+          if (r.status === 401) { logout(); throw new Error('Session expired'); }
+          if (!r.ok) throw new Error(d.error || 'Failed');
+          return d;
+        });
+      });
+    }
+
+    function doLogin() {
+      document.getElementById('loginErr').style.display = 'none';
+      fetch('/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', password: document.getElementById('pw').value })
+      }).then(function (r) {
+        return r.json().then(function (d) {
+          if (!r.ok) throw new Error(d.error);
+          T = d.token; S = d.salt;
+          sessionStorage.setItem('t', T);
+          sessionStorage.setItem('s', S);
+          loadDashboard();
+        });
+      }).catch(function (e) {
+        var el = document.getElementById('loginErr');
+        el.textContent = e.message;
+        el.style.display = 'block';
+      });
+    }
+
+    function loadDashboard() {
+      post({ action: 'dashboard' }).then(function (d) {
+        document.getElementById('login').style.display = 'none';
+        var dash = document.getElementById('dash');
+        dash.innerHTML = d.html;
+        dash.querySelectorAll('script').forEach(function (old) {
+          var s = document.createElement('script');
+          s.textContent = old.textContent;
+          old.replaceWith(s);
+        });
+        window.adminLoad(post);
+      }).catch(function (e) {
+        var el = document.getElementById('loginErr');
+        el.textContent = e.message;
+        el.style.display = 'block';
+      });
+    }
+
+    window.logout = function () {
+      T = S = '';
+      sessionStorage.clear();
+      document.getElementById('dash').innerHTML = '';
+      document.getElementById('login').style.display = '';
+    };
+
+    document.getElementById('pw').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    T = sessionStorage.getItem('t') || '';
+    S = sessionStorage.getItem('s') || '';
+    if (T && S) loadDashboard();
+  </script>
+</body>
+
+</html>
