@@ -3,6 +3,7 @@
 echo This script will help you set up a new Signal account using presage-cli.
 
 PRESAGE_BIN="twilio-hotline/assets/presage-cli.private.bin"
+#PRESAGE_BIN="./HACK_FOR_REGISTRATION_presage-cli"   # See https://github.com/whisperfish/presage/issues/371
 PRESAGE_DB="/tmp/presage.db.enc"
 ENV_FILE="twilio-hotline/.env"
 
@@ -42,8 +43,8 @@ fi
 
 if [ -v STORAGE_KEY ]; then
     echo STORAGE_KEY exists
-    echo Downloading database...
-    curl -k https://shen.timbrel.org:8447/download/$STORAGE_KEY -o $PRESAGE_DB
+#    echo Downloading database...
+#    curl -k https://shen.timbrel.org:8447/download/$STORAGE_KEY -o $PRESAGE_DB
 else
     echo Creating a new STORAGE_KEY 
     STORAGE_KEY=`uuidgen`
@@ -51,6 +52,10 @@ else
 fi
 
 PRESAGE_CMD="$PRESAGE_BIN --sqlite-db-path $PRESAGE_DB --passphrase $PRESAGE_PASSPHRASE"
+
+echo ======
+echo $PRESAGE_CMD
+echo ======
 
 echo Checking for a twilio phone number...
 PHONE_NUMBER_SID=`twilio api:core:incoming-phone-numbers:list | tail -n 1 | awk '{ print $1 }'`
@@ -81,7 +86,9 @@ else
     
     echo Go to twilio messages https://console.twilio.com/us1/monitor/logs/sms to find the confirmation code for the next step
     echo Or use 'twilio api:core:messages:list --properties=direction,dateSent,body --limit=1' to check for new messages -- make sure you get the latest one!
-    $PRESAGE_CMD register --servers production --phone-number $PHONE_NUMBER --captcha $SIGNAL_CAPTCHA
+    $PRESAGE_CMD register --force --servers production --phone-number $PHONE_NUMBER --captcha $SIGNAL_CAPTCHA
+
+    $PRESAGE_CMD update-profile --given-name "Hotline bot"
 fi
 
 # Have to receive a message *from the group* before we get the group key.
