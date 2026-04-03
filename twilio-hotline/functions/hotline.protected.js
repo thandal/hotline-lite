@@ -1,12 +1,12 @@
 
 exports.handler = async function (context, event, callback) {
-  const { sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const { langToLangLocale, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
   const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   const languages = context.LANGUAGES.split(',');
   const twiml = new Twilio.twiml.VoiceResponse();
   if (context.BLOCKLIST.split(',').includes(event.From)) {
     twiml.reject()
-  } else if (!event.Digits) {
+  } else if (!event.Digits && languages.length > 1) {
     // Update the workers first
     await updateWorkers(context);
     const gather = twiml.gather({ numDigits: 1 });
@@ -14,22 +14,29 @@ exports.handler = async function (context, event, callback) {
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
         const key = String(i + 1);
+        gather.say({ language: langToLangLocale[languages[0]] }, messagesMap[languages[i]].caller.welcome.hello);
         sayLangMap(
           gather,
           languages[i],
-          messagesMap[languages[i]].caller.welcome.hello.replace('{number}', key)
+          messagesMap[languages[i]].caller.welcome.menu.replace('{number}', key)
         );
         gather.pause({ length: 1 });
       }
       gather.pause({ length: 1 });
     }
     // If no response happens within the gather timeout, say goodbye in the default language and hang up:
-    twiml.say(messagesMap[languages[0]].caller.welcome.goodbye);
+    twiml.say({ language: langToLangLocale[languages[0]] }, messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
-  } else if (0 < event.Digits && event.Digits <= languages.length) {
-    // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
-    const key = languages[event.Digits - 1];  // zero-indexed
-    console.log("Caller selected language:", key);
+  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1) {
+    var key = languages[0];
+    if (languages.length == 1) {
+      // No language selection needed if there is just one language!
+      twiml.say({ language: langToLangLocale[languages[0]] }, messagesMap[key].caller.welcome.hello);
+    } else {
+      // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
+      key = languages[event.Digits - 1];  // zero-indexed
+      console.log("Caller selected language:", key);
+    }
     twiml.enqueue({
       workflowSid: context.WORKFLOW_SID,
       // Have to pass the language as a parameter because the Task
@@ -40,7 +47,7 @@ exports.handler = async function (context, event, callback) {
     }).task({}, JSON.stringify({ language: key }));
     twiml.hangup();
   } else {
-    twiml.say(messagesMap[languages[0]].caller.welcome.goodbye);
+    twiml.say({ language: langToLangLocale[languages[0]] }, messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
   }
   return callback(null, twiml);

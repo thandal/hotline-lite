@@ -30,7 +30,8 @@ const messagesMap = {
   en: {
     caller: {
       welcome: {
-        hello: "Thank you for calling the community hotline. Press {number} for English.",
+        hello: "Thank you for calling the community hotline.",
+        menu: "Press {number} for English.",
         goodbye: "Goodbye.",
       },
       wait: {
@@ -62,7 +63,8 @@ const messagesMap = {
   es: {
     caller: {
       welcome: {
-        hello: "Gracias por llamar a la línea directa comunitaria. Presione {number} para español.",
+        hello: "Gracias por llamar a la línea directa comunitaria.",
+        menu: "Presione {number} para español.",
         goodbye: "Cuídese.",
       },
       wait: {
@@ -96,4 +98,4 @@ const messagesMap = {
 const ES_MESSAGES = messagesMap.es;
 const EN_MESSAGES = messagesMap.en;
 
-module.exports = { sayLangMap, messagesMap };
+module.exports = { langToLangLocale, sayLangMap, messagesMap };
