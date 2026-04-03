@@ -28,9 +28,10 @@ const sayLangMap = function (twiml, lang2, message, phone = "") {
 
 const messagesMap = {
   en: {
+    name: "the community hotline",
     caller: {
       welcome: {
-        hello: "Thank you for calling the community hotline.",
+        hello: "Thank you for calling {name}.",
         menu: "Press {number} for English.",
         goodbye: "Goodbye.",
       },
@@ -44,7 +45,7 @@ const messagesMap = {
     },
     operator: {
       precall: {
-        intro: "This is a call from the community hotline. Press any key to accept the call.",
+        intro: "This is a call from {name}. Press any key to accept the call.",
         noResponse: "You didn't respond, so we're moving on to another operator. This call was from {number}.",
         reservationStatus: {
           rescinded: "Another operator answered this call.",
@@ -61,9 +62,10 @@ const messagesMap = {
     }
   },
   es: {
+    name: "la linea directa comunitaria",
     caller: {
       welcome: {
-        hello: "Gracias por llamar a la línea directa comunitaria.",
+        hello: "Gracias por llamar a {name}.",
         menu: "Presione {number} para español.",
         goodbye: "Cuídese.",
       },
@@ -77,7 +79,7 @@ const messagesMap = {
     },
     operator: {
       precall: {
-        intro: "Esta es una llamada de la línea directa comunitaria. Presione cualquier tecla para aceptar la llamada.",
+        intro: "Esta es una llamada de {name}. Presione cualquier tecla para aceptar la llamada.",
         noResponse: "No respondió, así que pasamos a otro operador. Esta llamada era de {number}.",
         reservationStatus: {
           rescinded: "Otre operador respondió a esta llamada.",

@@ -3,7 +3,7 @@ exports.handler = async function (context, event, callback) {
   const { langToLangLocale, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
   const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   const languages = context.LANGUAGES.split(',');
-  const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : ["the community hotline"];
+  const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
   const twiml = new Twilio.twiml.VoiceResponse();
   if (context.BLOCKLIST.split(',').includes(event.From)) {
     twiml.reject()
@@ -15,7 +15,7 @@ exports.handler = async function (context, event, callback) {
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
         const key = String(i + 1);
-        gather.say({ language: langToLangLocale[languages[i]] }, messagesMap[languages[i]].caller.welcome.hello);
+        gather.say({ language: langToLangLocale[languages[i]] }, messagesMap[languages[i]].caller.welcome.hello.replace('{name}', hotlineName[i]));
         sayLangMap(
           gather,
           languages[i],
@@ -32,7 +32,7 @@ exports.handler = async function (context, event, callback) {
     var key = languages[0];
     if (languages.length == 1) {
       // No language selection needed if there is just one language!
-      twiml.say({ language: langToLangLocale[key] }, messagesMap[key].caller.welcome.hello);
+      twiml.say({ language: langToLangLocale[key] }, messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed
