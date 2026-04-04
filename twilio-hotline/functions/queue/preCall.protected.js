@@ -9,7 +9,7 @@ exports.handler = function (context, event, callback) {
       numDigits: 1,
       timeout: 15
     });
-    sayLangMap(gather, event.language, messagesMap[event.language].operator.precall.intro, event.callerFrom);
+    sayLangMap(gather, event.language, messagesMap[event.language].operator.precall.intro.replace('{name}', messagesMap[event.language].name), event.callerFrom);
     // By default, if no gather response happens within the timeout, reject the reservation.
     sayLangMap(
       twiml,
