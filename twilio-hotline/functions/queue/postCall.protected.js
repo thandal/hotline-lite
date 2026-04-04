@@ -4,14 +4,19 @@ exports.handler = async function (context, event, callback) {
   const twiml = new Twilio.twiml.VoiceResponse();
   if (!event.Digits) {
     const client = context.getTwilioClient();
-    const reservation = await client.taskrouter.v1
-        .workspaces(context.WORKSPACE_SID)
-        .tasks(event.taskSid)
-        .reservations(event.reservationSid)
-        .fetch();
-    console.log("postCall reservationStatus " + reservation.reservationStatus);
-    if (reservation.reservationStatus != 'completed') {
-      twiml.say("Call reservation failed with status " + reservation.reservationStatus);
+    try {
+      const reservation = await client.taskrouter.v1
+          .workspaces(context.WORKSPACE_SID)
+          .tasks(event.taskSid)
+          .reservations(event.reservationSid)
+          .fetch();
+      console.log("postCall reservationStatus " + reservation.reservationStatus);
+      if (reservation.reservationStatus != 'completed') {
+        twiml.say("Call reservation failed with status " + reservation.reservationStatus);
+      }
+    } catch (err) {
+      console.log("postCall reservation fetch failed: " + err.message);
+      twiml.say("Call reservation status is unavailable.");
     }
     const gather = twiml.gather({ numDigits: 1 });
     sayLangMap(
