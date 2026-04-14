@@ -94,6 +94,18 @@ exports.handler = async function (context, event, callback) {
       const dashPath = Runtime.getAssets()['/dashboard.html'].path;
       resp.setBody({ html: fs.readFileSync(dashPath, 'utf8') });
 
+    } else if (event.action === 'send-test-signal') {
+      const message = (event.message || '').toString();
+      if (!message.trim()) {
+        resp.setStatusCode(400);
+        resp.setBody({ error: 'Message cannot be empty' });
+        return callback(null, resp);
+      }
+      const { notify } = require(Runtime.getAssets()['/notify.js'].path);
+      const result = await notify(context, message);
+      if (result === 'OK') resp.setBody({ ok: true });
+      else { resp.setStatusCode(500); resp.setBody({ error: 'Failed to send Signal message' }); }
+
     } else {
       resp.setStatusCode(400);
       resp.setBody({ error: 'Unknown action' });
