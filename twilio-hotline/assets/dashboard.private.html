@@ -151,6 +151,18 @@
 </div>
 
 <div class="card">
+  <h2>Hotline Name</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    The name spoken in the phone greeting. Set one name per language, in the same order as Languages above.
+    Leave every field blank to use the built-in default names.
+  </p>
+  <div id="nameList"></div>
+  <div class="row">
+    <button onclick="saveHotlineName(this)">Save</button>
+  </div>
+</div>
+
+<div class="card">
   <h2>Signal</h2>
   <div id="sigStatus" style="font-size:13px;color:#555;margin-bottom:8px">Checking...</div>
 
@@ -323,6 +335,14 @@
       return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px">' + l +
         ' <span style="cursor:pointer;color:#dc2626" onclick="removeLang(' + i + ')">&times;</span></span>';
     }).join('') || '<p style="color:#999;font-size:14px">None</p>';
+
+    $('nameList').innerHTML = DATA.languages.length ? DATA.languages.map(function (l, i) {
+      var val = (DATA.hotlineName && DATA.hotlineName[i]) || '';
+      return '<div class="row" style="align-items:center">' +
+        '<span class="tag" style="align-self:center">' + l + '</span>' +
+        '<input id="name-' + i + '" value="' + escapeHtml(val) + '" placeholder="(default)">' +
+        '</div>';
+    }).join('') : '<p style="color:#999;font-size:14px">Add a language first</p>';
   }
 
   function toggleAdd() { $('addForm').classList.toggle('hide'); }
@@ -554,6 +574,21 @@
     api({ action: 'update-languages', languages: DATA.languages.filter(function (_, j) { return j !== i; }) })
       .then(reloadStatus)
       .catch(catcher('Remove language'));
+  };
+
+  window.saveHotlineName = function (btn) {
+    var names = DATA.languages.map(function (_, i) { return $('name-' + i).value.trim(); });
+    var filled = names.filter(Boolean);
+    // HOTLINE_NAME is positional: a partial list would shift names onto the
+    // wrong languages, so require all-or-nothing.
+    if (filled.length && filled.length !== names.length) {
+      return showError('Set a name for every language, or leave them all blank to use the defaults');
+    }
+    withButton(btn, 'Saving...', function () {
+      return api({ action: 'update-hotline-name', hotlineName: filled.length ? names : [] })
+        .then(reloadStatus)
+        .catch(catcher('Save hotline name'));
+    });
   };
 
   window.sendMessage = function (btn) {

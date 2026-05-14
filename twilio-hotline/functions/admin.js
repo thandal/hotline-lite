@@ -72,7 +72,9 @@ exports.handler = async function (context, event, callback) {
       const blocklist = bval === 'null' ? [] : bval.split(',').filter(Boolean);
       const lv = vars.find(v => v.key === 'LANGUAGES');
       const languages = lv ? lv.value.split(',') : [];
-      resp.setBody({ operators, blocklist, languages });
+      const hv = vars.find(v => v.key === 'HOTLINE_NAME');
+      const hotlineName = hv && hv.value ? hv.value.split(',') : [];
+      resp.setBody({ operators, blocklist, languages, hotlineName });
 
     } else if (event.action === 'add-operator') {
       const key = 'worker' + event.phone.slice(-4);
@@ -108,6 +110,22 @@ exports.handler = async function (context, event, callback) {
       const v = vars.find(v => v.key === 'LANGUAGES');
       if (v) await env.variables(v.sid).update({ value });
       else await env.variables.create({ key: 'LANGUAGES', value });
+      resp.setBody({ ok: true });
+
+    } else if (event.action === 'update-hotline-name') {
+      // A comma-separated HOTLINE_NAME is read as one name per language, in
+      // LANGUAGES order (see hotline.protected.js). An empty list clears the
+      // var so the built-in per-language defaults take over.
+      const names = (event.hotlineName || []).map(s => s.trim());
+      const value = names.join(',');
+      const v = vars.find(v => v.key === 'HOTLINE_NAME');
+      if (value === '') {
+        if (v) await env.variables(v.sid).remove();
+      } else if (v) {
+        await env.variables(v.sid).update({ value });
+      } else {
+        await env.variables.create({ key: 'HOTLINE_NAME', value });
+      }
       resp.setBody({ ok: true });
 
     } else if (event.action === 'dashboard') {
