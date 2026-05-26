@@ -39,6 +39,14 @@
     background: #b91c1c;
   }
 
+  button:disabled,
+  button:disabled:hover {
+    background: #94a3b8;
+    color: #f1f5f9;
+    cursor: progress;
+    opacity: 0.85;
+  }
+
   button.sec {
     background: #fff;
     color: #2563eb;
@@ -56,11 +64,21 @@
   }
 
   .msg {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1000;
     padding: 8px 12px;
     border-radius: 4px;
-    margin-bottom: 12px;
     font-size: 13px;
-    max-width: 800px;
+    max-width: min(640px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .err {
@@ -124,22 +142,98 @@
 </div>
 
 <div class="card">
-  <h2>Test Signal Notification</h2>
-  <div class="row">
-    <textarea id="tMsg" placeholder="Test message"
-      style="flex:1;min-width:200px;height:60px;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;font-size:14px">Test notification from hotline admin</textarea>
-  </div>
-  <div class="row">
-    <button onclick="sendTest()">Send Test</button>
-  </div>
-</div>
-
-<div class="card">
   <h2>Languages</h2>
   <div id="langList"></div>
   <div class="row">
     <input id="lCode" placeholder="fr">
     <button onclick="addLang()">Add</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Hotline Name</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    The name spoken in the phone greeting. Set one name per language, in the same order as Languages above.
+    Leave every field blank to use the built-in default names.
+  </p>
+  <div id="nameList"></div>
+  <div class="row">
+    <button onclick="saveHotlineName(this)">Save</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Signal</h2>
+  <div id="sigStatus" style="font-size:13px;color:#555;margin-bottom:8px">Checking...</div>
+
+  <div id="sigRegister" class="hide">
+    <p style="font-size:13px;color:#555">
+      Not registered. The hotline number <code id="sigAutoPhone">(detecting...)</code> will be used.
+      Paste a captcha from
+      <a href="https://signalcaptchas.org/registration/generate" target="_blank">signalcaptchas.org</a>
+      (right-click "Open Signal" and copy the <code>signalcaptcha://</code> URL).
+    </p>
+    <div class="row">
+      <input id="sigCaptcha" placeholder="signalcaptcha://..." autocomplete="off">
+    </div>
+    <div class="row">
+      <button onclick="sigRegister(this)">Register</button>
+    </div>
+    <p style="font-size:12px;color:#888;margin-top:8px">
+      Registration sends a verification SMS to the hotline number; this page auto-detects it from Twilio's message log and completes the flow. Allow ~10 seconds.
+    </p>
+
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Or upload an existing keystore</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:6px">
+      Skip registration if you already have a valid <code>presage.db</code> from a previous session. Upload replaces whatever is in Twilio Sync.
+    </p>
+    <div class="row">
+      <input id="sigRegUploadFile" type="file" accept=".db" style="align-self:center;font-size:12px">
+      <button class="sec" onclick="sigUploadDb(this, 'sigRegUploadFile')">Upload DB</button>
+    </div>
+  </div>
+
+  <div id="sigManage" class="hide">
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:12px 0 6px">Profile</h3>
+    <div class="row">
+      <input id="sigProfileName" placeholder="Display name, e.g. Hotline bot" autocomplete="off">
+      <button onclick="sigUpdateProfile(this)">Set profile name</button>
+    </div>
+
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Groups</h3>
+    <div id="sigActiveGroup" style="font-size:13px;color:#555;margin-bottom:8px"></div>
+    <div class="row" style="align-items:center">
+      <button class="sec" onclick="sigListGroups(this)">Refresh group list</button>
+      <span style="font-size:12px;color:#888">Syncs with Signal, then lists groups. The bot must have been invited and received at least one group message first.</span>
+    </div>
+    <div id="sigGroups" style="margin-top:8px"></div>
+
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Send to active group</h3>
+    <div class="row">
+      <textarea id="tMsg" placeholder="Message to send to the active group"
+        style="flex:1;min-width:200px;height:60px;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;font-size:14px">Test notification from hotline admin</textarea>
+    </div>
+    <div class="row">
+      <button onclick="sendMessage(this)">Send to group</button>
+    </div>
+
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Keystore import / export</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:6px">
+      Download the decrypted SQLite DB to run presage-cli locally (diagnostics). Upload replaces the Sync keystore with a DB you've modified locally.
+    </p>
+    <div class="row">
+      <button class="sec" onclick="sigDownloadDb(this)">Download DB</button>
+      <input id="sigUploadFile" type="file" accept=".db" style="align-self:center;font-size:12px">
+      <button class="sec" onclick="sigUploadDb(this)">Upload DB</button>
+    </div>
+
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Danger zone</h3>
+    <div class="row">
+      <button class="del" onclick="sigReset(this)">Reset keystore &amp; re-register</button>
+      <span style="font-size:12px;color:#888;align-self:center">Wipes the Signal keystore from Twilio Sync. Use only if the bot is stuck.</span>
+    </div>
+
+    <div id="sigDebug" style="font-size:11px;color:#aaa;margin-top:16px;padding-top:8px;border-top:1px solid #eee;font-family:ui-monospace,monospace"></div>
   </div>
 </div>
 
@@ -150,11 +244,73 @@
   function show(id) { $(id).classList.remove('hide'); }
   function hide(id) { $(id).classList.add('hide'); }
 
-  function msg(txt, isErr) {
-    $('msg').textContent = txt;
-    $('msg').className = 'msg ' + (isErr ? 'err' : 'ok');
+  // Errors surface as a fixed-position toast at bottom-right, click to dismiss.
+  // Success/progress messages are intentionally not shown — they shifted layout.
+  function showError(txt) {
+    var m = $('msg');
+    m.textContent = txt;
+    m.className = 'msg err';
+    m.onclick = function () { hide('msg'); };
+    m.style.cursor = 'pointer';
     show('msg');
-    if (!isErr) setTimeout(function () { hide('msg'); }, 3000);
+  }
+
+  function clearError() { hide('msg'); }
+
+  // Single error path for every API call. Logs full detail to console (for the
+  // browser-DevTools view) and renders a readable toast (for the server-stderr view
+  // the user normally sees). Hint detection runs against stderr to surface common
+  // recoverable conditions (Signal rate limit, expired captcha, etc.).
+  function reportError(label, e) {
+    console.error(label + ' failed', e.body || e);
+    var stderr = (e.body && e.body.stderr) || '';
+    var hint = '';
+    var rateLimitMatch = stderr.match(/Rate limit exceeded: retry after PT(\d+)S/);
+    if (rateLimitMatch) {
+      var seconds = parseInt(rateLimitMatch[1], 10);
+      var minutes = Math.ceil(seconds / 60);
+      hint = 'Signal rate-limited the send. Wait ~' + minutes + ' minute' + (minutes === 1 ? '' : 's') + ' (' + seconds + ' s) and try once more — repeated attempts before then will reset the timer.\n\n';
+    } else if (/Exceeded maximum number of retries/.test(stderr)) {
+      hint = 'libsignal gave up retrying. This is usually Signal rate-limiting under the hood; wait several minutes and try once more.\n\n';
+    } else if (/allowed_to_request_code: false/.test(stderr)) {
+      hint = 'Signal is rate-limiting this phone number. Wait a few hours, then try a fresh captcha.\n\n';
+    } else if (/captcha/i.test(stderr) && /(invalid|expired|failed)/i.test(stderr)) {
+      hint = 'Captcha was rejected. Grab a fresh one from signalcaptchas.org.\n\n';
+    } else if (/UnknownGroup|Authorization failed/.test(stderr)) {
+      hint = 'The bot is not (or is no longer) a member of the active group. After re-registering, the bot has a fresh Signal identity and needs to be re-invited. Add the bot to the Signal group again, then post a message in it, then click Refresh group list and Make active.\n\n';
+    }
+    var lines = [label + ' failed: ' + hint + (e.message || 'unknown error')];
+    if (stderr) lines.push('', 'stderr:', stderr);
+    if (e.body && e.body.stdout) lines.push('', 'stdout:', e.body.stdout);
+    if (e.body && e.body.code) lines.push('code: ' + e.body.code);
+    if (e.body && e.body.status != null) lines.push('exit status: ' + e.body.status);
+    showError(lines.join('\n'));
+  }
+
+  // Convenience: returns a `.catch` handler bound to a label. Use as
+  //   api({...}).then(...).catch(catcher('Send Test'))
+  function catcher(label) {
+    return function (e) { reportError(label, e); };
+  }
+
+  // Wraps an action so the button shows it's busy. Disables the button and
+  // swaps its text for `busyText` while the promise is in flight; restores both
+  // on settle. Locks button width to avoid layout shift from text length changes.
+  // Pass the button element via `this` from the onclick handler.
+  function withButton(btn, busyText, action) {
+    if (!btn) return Promise.resolve(action());
+    var origText = btn.textContent;
+    var origMinWidth = btn.style.minWidth;
+    btn.style.minWidth = btn.offsetWidth + 'px';
+    btn.disabled = true;
+    btn.textContent = busyText;
+    return Promise.resolve()
+      .then(action)
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = origText;
+        btn.style.minWidth = origMinWidth;
+      });
   }
 
   function render() {
@@ -179,6 +335,14 @@
       return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px">' + l +
         ' <span style="cursor:pointer;color:#dc2626" onclick="removeLang(' + i + ')">&times;</span></span>';
     }).join('') || '<p style="color:#999;font-size:14px">None</p>';
+
+    $('nameList').innerHTML = DATA.languages.length ? DATA.languages.map(function (l, i) {
+      var val = (DATA.hotlineName && DATA.hotlineName[i]) || '';
+      return '<div class="row" style="align-items:center">' +
+        '<span class="tag" style="align-self:center">' + l + '</span>' +
+        '<input id="name-' + i + '" value="' + escapeHtml(val) + '" placeholder="(default)">' +
+        '</div>';
+    }).join('') : '<p style="color:#999;font-size:14px">Add a language first</p>';
   }
 
   function toggleAdd() { $('addForm').classList.toggle('hide'); }
@@ -196,73 +360,243 @@
 
   window.adminLoad = function (apiFunc) {
     window.api = apiFunc;
-    api({ action: 'status' }).then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+    api({ action: 'status' }).then(function (d) { DATA = d; render(); }).catch(catcher('Status'));
+    refreshSignalStatus();
+  };
+
+  function reloadStatus() { return api({ action: 'status' }).then(function (d) { DATA = d; render(); }); }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderActiveGroup(s) {
+    if (s.activeGroupLine) {
+      $('sigActiveGroup').innerHTML = 'Active group: <code style="font-size:12px">' + escapeHtml(s.activeGroupLine) + '</code>';
+    } else if (s.activeGroupKey) {
+      $('sigActiveGroup').innerHTML =
+        'Active group key is set but the bot hasn\'t synced metadata for it yet. ' +
+        'Someone needs to post a message in the group, then click Refresh group list.' +
+        '<br><code style="font-size:12px">' + escapeHtml(s.activeGroupKey) + '</code>';
+    } else {
+      $('sigActiveGroup').innerHTML = '<em>No active group set.</em>';
+    }
+  }
+
+  function renderKeystoreDebug(k) {
+    if (!k) { $('sigDebug').textContent = 'keystore: uninitialized'; return; }
+    function slot(name, info) {
+      if (!info) return name + ':-';
+      var kb = Math.round((info.size || 0) / 102.4) / 10;
+      return name + ':' + info.chunks + 'ch/' + kb + 'kB';
+    }
+    var cur = k.current ? '[' + k.current + ']' : '[none]';
+    var parts = ['keystore', cur, slot('a', k.a), slot('b', k.b)];
+    if (k.updated_at) parts.push('updated ' + k.updated_at);
+    $('sigDebug').textContent = parts.join(' ');
+  }
+
+  function refreshSignalStatus() {
+    return api({ action: 'signal-status' }).then(function (s) {
+      $('sigAutoPhone').textContent = s.hotlinePhone || '(no Twilio number found)';
+      if (s.registered) {
+        $('sigStatus').innerHTML = 'Registered as <code>' + escapeHtml(s.whoami) + '</code>';
+        var given = s.profile && s.profile.given_name;
+        if (given && $('sigProfileName').value.trim() === '') {
+          $('sigProfileName').value = given;
+        }
+        renderActiveGroup(s);
+        show('sigManage'); hide('sigRegister');
+      } else {
+        $('sigStatus').textContent = 'Not registered' + (s.error ? ' (' + s.error + ')' : '');
+        show('sigRegister'); hide('sigManage');
+      }
+      renderKeystoreDebug(s.keystore);
+    }).catch(catcher('Signal status'));
+  }
+
+  window.sigDownloadDb = function (btn) {
+    withButton(btn, 'Downloading...', function () {
+      return api({ action: 'signal-download-db' }).then(function (d) {
+        var binary = atob(d.dbBase64);
+        var bytes = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        var blob = new Blob([bytes], { type: 'application/octet-stream' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'presage.db';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }).catch(catcher('Download DB'));
+    });
+  };
+
+  window.sigUploadDb = function (btn, inputId) {
+    var input = $(inputId || 'sigUploadFile');
+    var file = input.files && input.files[0];
+    if (!file) return showError('Choose a .db file to upload');
+    if (!confirm('Overwrite the Sync-stored keystore with ' + file.name + ' (' + file.size + ' bytes)?')) return;
+    withButton(btn, 'Uploading...', function () {
+      return file.arrayBuffer().then(function (buf) {
+        // Base64-encode in chunks to avoid blowing the stack on large buffers.
+        var bytes = new Uint8Array(buf);
+        var CHUNK = 0x8000;
+        var binary = '';
+        for (var i = 0; i < bytes.length; i += CHUNK) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+        }
+        var b64 = btoa(binary);
+        return api({ action: 'signal-upload-db', dbBase64: b64 });
+      }).then(function () { input.value = ''; refreshSignalStatus(); }).catch(catcher('Upload DB'));
+    });
+  };
+
+  window.sigReset = function (btn) {
+    if (!confirm('Wipe the Signal keystore from Twilio Sync? You will need to re-register.')) return;
+    withButton(btn, 'Resetting...', function () {
+      return api({ action: 'signal-reset-keystore' })
+        .then(refreshSignalStatus)
+        .catch(catcher('Reset keystore'));
+    });
+  };
+
+  window.sigRegister = function (btn) {
+    var captcha = $('sigCaptcha').value.trim();
+    if (captcha.indexOf('signalcaptcha://') !== 0) return showError('Captcha must start with signalcaptcha://');
+    withButton(btn, 'Registering...', function () {
+      return api({ action: 'signal-register', captcha: captcha })
+        .then(refreshSignalStatus)
+        .catch(catcher('Register'));
+    });
+  };
+
+  window.sigUpdateProfile = function (btn) {
+    var name = $('sigProfileName').value.trim();
+    if (!name) return showError('Enter a display name');
+    withButton(btn, 'Setting...', function () {
+      return api({ action: 'signal-update-profile', givenName: name })
+        .then(function () { $('sigProfileName').value = ''; })
+        .then(refreshSignalStatus)
+        .catch(catcher('Update profile'));
+    });
+  };
+
+  window.sigListGroups = function (btn) {
+    withButton(btn, 'Refreshing...', function () {
+      return api({ action: 'signal-list-groups' })
+        .then(function (d) {
+          var lines = d.groups || [];
+          if (!lines.length) {
+            $('sigGroups').innerHTML = '<p style="color:#999;font-size:13px">No groups yet. Invite the bot to a group and send a message there, then click Refresh.</p>';
+            return;
+          }
+          $('sigGroups').innerHTML = lines.map(function (line) {
+            var space = line.indexOf(' ');
+            var key = space > 0 ? line.slice(0, space) : line;
+            return '<div class="row" style="align-items:center;gap:8px">' +
+              '<code style="flex:1;font-size:12px;word-break:break-all">' + escapeHtml(line) + '</code>' +
+              '<button onclick="sigSetGroup(this, \'' + escapeHtml(key) + '\')">Make active</button>' +
+              '</div>';
+          }).join('');
+        })
+        .catch(catcher('List groups'));
+    });
+  };
+
+  window.sigSetGroup = function (btn, masterKey) {
+    withButton(btn, 'Setting...', function () {
+      return api({ action: 'signal-set-group', masterKey: masterKey })
+        .then(refreshSignalStatus)
+        .catch(catcher('Set active group'));
+    });
   };
 
   window.addOp = function () {
     var names = $('aNames').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     var phone = $('aPhone').value.trim();
     var languages = $('aLangs').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    if (!names.length || !phone || !languages.length) return msg('All fields required', true);
+    if (!names.length || !phone || !languages.length) return showError('All fields required');
     api({ action: 'add-operator', names: names, phone: phone, languages: languages })
-      .then(function () { $('aNames').value = $('aPhone').value = $('aLangs').value = ''; hide('addForm'); msg('Operator added'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+      .then(function () { $('aNames').value = $('aPhone').value = $('aLangs').value = ''; hide('addForm'); })
+      .then(reloadStatus)
+      .catch(catcher('Add operator'));
   };
 
   window.removeOp = function (key) {
     if (!confirm('Remove this operator?')) return;
     api({ action: 'remove-operator', key: key })
-      .then(function () { msg('Removed'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+      .then(reloadStatus)
+      .catch(catcher('Remove operator'));
   };
 
   window.saveOp = function (key) {
     var names = $('eNames').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     var phone = $('ePhone').value.trim();
     var languages = $('eLangs').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    if (!names.length || !phone || !languages.length) return msg('All fields required', true);
+    if (!names.length || !phone || !languages.length) return showError('All fields required');
     api({ action: 'update-operator', key: key, names: names, phone: phone, languages: languages })
-      .then(function () { msg('Operator updated'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+      .then(reloadStatus)
+      .catch(catcher('Update operator'));
   };
 
   window.addBlock = function () {
     var n = $('bNum').value.trim();
-    if (!n || !/^\+\d{7,15}$/.test(n)) return msg('Enter valid E.164 number', true);
+    if (!n || !/^\+\d{7,15}$/.test(n)) return showError('Enter valid E.164 number');
     api({ action: 'update-blocklist', blocklist: DATA.blocklist.concat([n]) })
-      .then(function () { $('bNum').value = ''; msg('Blocked'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+      .then(function () { $('bNum').value = ''; })
+      .then(reloadStatus)
+      .catch(catcher('Block number'));
   };
 
   window.removeBlock = function (i) {
     api({ action: 'update-blocklist', blocklist: DATA.blocklist.filter(function (_, j) { return j !== i; }) })
-      .then(function () { msg('Unblocked'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+      .then(reloadStatus)
+      .catch(catcher('Unblock number'));
   };
 
   window.addLang = function () {
     var l = $('lCode').value.trim().toLowerCase();
     if (!l) return;
-    if (DATA.languages.indexOf(l) >= 0) return msg('Already exists', true);
+    if (DATA.languages.indexOf(l) >= 0) return showError('Language already exists');
     api({ action: 'update-languages', languages: DATA.languages.concat([l]) })
-      .then(function () { $('lCode').value = ''; msg('Added'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
-  };
-
-  window.sendTest = function () {
-    var m = $('tMsg').value.trim();
-    if (!m) return msg('Enter a message', true);
-    if (!confirm('Send this test message via Signal?')) return;
-    msg('Sending...');
-    api({ action: 'send-test-signal', message: m })
-      .then(function () { msg('Test message sent'); })
-      .catch(function (e) { msg(e.message, true); });
+      .then(function () { $('lCode').value = ''; })
+      .then(reloadStatus)
+      .catch(catcher('Add language'));
   };
 
   window.removeLang = function (i) {
-    if (DATA.languages.length <= 1) return msg('Need at least one language', true);
+    if (DATA.languages.length <= 1) return showError('Need at least one language');
     api({ action: 'update-languages', languages: DATA.languages.filter(function (_, j) { return j !== i; }) })
-      .then(function () { msg('Removed'); return api({ action: 'status' }); })
-      .then(function (d) { DATA = d; render(); }).catch(function (e) { msg(e.message, true); });
+      .then(reloadStatus)
+      .catch(catcher('Remove language'));
   };
+
+  window.saveHotlineName = function (btn) {
+    var names = DATA.languages.map(function (_, i) { return $('name-' + i).value.trim(); });
+    var filled = names.filter(Boolean);
+    // HOTLINE_NAME is positional: a partial list would shift names onto the
+    // wrong languages, so require all-or-nothing.
+    if (filled.length && filled.length !== names.length) {
+      return showError('Set a name for every language, or leave them all blank to use the defaults');
+    }
+    withButton(btn, 'Saving...', function () {
+      return api({ action: 'update-hotline-name', hotlineName: filled.length ? names : [] })
+        .then(reloadStatus)
+        .catch(catcher('Save hotline name'));
+    });
+  };
+
+  window.sendMessage = function (btn) {
+    var m = $('tMsg').value.trim();
+    if (!m) return showError('Enter a message');
+    withButton(btn, 'Sending...', function () {
+      return api({ action: 'send-test-signal', message: m }).catch(catcher('Send to group'));
+    });
+  };
+
 </script>

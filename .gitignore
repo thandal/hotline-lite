@@ -1,5 +1,6 @@
 DO_NOT_SUBMIT*
 
-.env
+.env*
+.twilio*
 *.swp
 *.pem
