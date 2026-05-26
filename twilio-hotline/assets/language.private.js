@@ -1,27 +1,42 @@
 // NOTE: Languages are by default mapped to voices by the Twilio settings here: https://console.twilio.com/us1/develop/voice/settings/text-to-speech
 const langToLangLocale = {
-  en: 'en-US',
-  es: 'es-MX',
-  fr: 'fr-FR',
-  pt: 'pt-BR',
-  ht: 'ht-HT',
-  zh: 'zh-CN',
+  en: ['en-US', 'English'],
+  es: ['es-MX', 'Spanish'],
+  fr: ['fr-FR', 'French'],
+  pt: ['pt-BR', 'Portuguese'],
+  ht: ['ht-HT', 'Haitian Creole'],
+  zh: ['zh-CN', 'Chinese'],
+  ar: ['ar-IQ', 'Arabic'],
+  ku: ['ku-IQ', 'Kurdish'],
+  ti: ['ti-ET', 'Tigrinya'],
+  sw: ['sw-KE', 'Swahili'],
+  uk: ['uk-UA', 'Ukrainian'],
+  rw: ['rw-RW', 'Kinyarwanda'],
+  ru: ['ru-RU', 'Russian'],
+  am: ['am-ET', 'Amharic'],
+  fa: ['fa-AF', 'Dari'],
+  vi: ['vi-VN', 'Vietnamese'],
 };
+
+const formatE164 = function (phone) {
+  // E.164 to (XXX) XXX-XXXX
+  if (phone.length == 12) {
+    let formattedPhone = "(" + phone.slice(2, 5) + ") " + phone.slice(5, 8) + "-" + phone.slice(8, 12);
+  } else if (phone.length == 11) {
+    let formattedPhone = "(" + phone.slice(1, 4) + ") " + phone.slice(4, 7) + "-" + phone.slice(7, 11);
+  }
+  return formattedPhone;
+}
 
 // This is a TwiML helper function that can be used to say a phone number in a more human-friendly way.
 // The twiml object must have a say() sub-verb. Examples include twiml itself, and twiml.gather.
 const sayLangMap = function (twiml, lang2, message, phone = "") {
   const messageParts = message.split("{number}");
   for (let i = 0; i < messageParts.length; i++) {
-    const say = twiml.say({ language: langToLangLocale[lang2] }, messageParts[i]);
+    const say = twiml.say({ language: langToLangLocale[lang2][0] }, messageParts[i]);
     if (i < messageParts.length - 1) {
-      // E.164 to (XXX) XXX-XXXX
-      if (phone.length == 12) {
-        phone = "(" + phone.slice(2, 5) + ") " + phone.slice(5, 8) + "-" + phone.slice(8, 12);
-      } else if (phone.length == 11) {
-        phone = "(" + phone.slice(1, 4) + ") " + phone.slice(4, 7) + "-" + phone.slice(7, 11);
-      }
-      say.sayAs({ "interpret-as": "telephone" }, phone);
+      const formattedPhone = formatE164(phone);
+      say.sayAs({ "interpret-as": "telephone" }, formattedPhone);
     }
   }
 }
@@ -100,4 +115,4 @@ const messagesMap = {
 const ES_MESSAGES = messagesMap.es;
 const EN_MESSAGES = messagesMap.en;
 
-module.exports = { langToLangLocale, sayLangMap, messagesMap };
+module.exports = { langToLangLocale, sayLangMap, messagesMap, formatE164 };

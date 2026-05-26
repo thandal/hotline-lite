@@ -11,7 +11,7 @@ exports.handler = async function (context, event, callback) {
     );
     twiml.record({
       finishOnKey: '*#',
-      recordingStatusCallback: '/recordingStatusCallback?callerFrom=' + encodeURIComponent(event.callerFrom),
+      recordingStatusCallback: '/recordingStatusCallback?callerFrom=' + encodeURIComponent(event.callerFrom) + '&language=' + event.language,
     });
   }
   twiml.hangup();

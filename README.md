@@ -18,9 +18,8 @@ A simple, privacy-first Twilio-based hotline. Key features
 
 # Setup
 
-1. Install twilio CLI: https://www.twilio.com/docs/twilio-cli/getting-started/install
-2. Clone this repo: `gh repo clone thandal/hotline-lite`
-3. Run the setup script: `./setup_hotline.sh`
+1. Clone this repo: `gh repo clone thandal/hotline-lite`
+2. Run the setup script: `./setup_hotline.sh`
 
 # Operation
 
