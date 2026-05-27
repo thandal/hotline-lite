@@ -142,6 +142,36 @@
 </div>
 
 <div class="card">
+  <h2>Special Call Handling <button onclick="toggleSeqAdd()" style="float:right" class="sec">+ Add</button></h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    Some callers arrive through a collect-call gateway that must be sent a key sequence before the caller is connected.
+    For each such number, set the keys to dial and how many seconds to wait for the gateway's prompt first.
+    Sequences may contain digits, <code>*</code>, <code>#</code>, and <code>w</code> (a 0.5&nbsp;s pause).
+  </p>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px">
+    <input type="checkbox" id="allowlistOnly" onchange="saveAllowlistOnly(this)">
+    Only accept calls from the numbers listed below (reject everyone else)
+  </label>
+  <div id="seqAddForm" class="row hide">
+    <input id="sNum" placeholder="+12025551234">
+    <input id="sPause" type="number" min="0" step="1" value="2" style="max-width:90px" placeholder="Pause (s)">
+    <input id="sSeq" placeholder="Keys, e.g. 1w#" pattern="[0-9*#wW]+">
+    <button onclick="addSeq()">Add</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Number</th>
+        <th>Pause (s)</th>
+        <th>Key Sequence</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="seqBody"></tbody>
+  </table>
+</div>
+
+<div class="card">
   <h2>Languages</h2>
   <div id="langList"></div>
   <div class="row">
@@ -343,9 +373,22 @@
         '<input id="name-' + i + '" value="' + escapeHtml(val) + '" placeholder="(default)">' +
         '</div>';
     }).join('') : '<p style="color:#999;font-size:14px">Add a language first</p>';
+
+    var seqs = DATA.connectionSequences || [];
+    $('seqBody').innerHTML = seqs.length ? seqs.map(function (c, i) {
+      return '<tr id="seqrow-' + i + '">' +
+        '<td>' + escapeHtml(c.number) + '</td>' +
+        '<td>' + (parseInt(c.pause, 10) || 0) + '</td>' +
+        '<td>' + escapeHtml(c.sequence) + '</td>' +
+        '<td style="white-space:nowrap">' +
+        '<button class="sec" onclick="editSeq(' + i + ')">Edit</button> ' +
+        '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
+    }).join('') : '<tr><td colspan="4" style="color:#999">None</td></tr>';
+    if ($('allowlistOnly')) $('allowlistOnly').checked = !!DATA.allowlistOnly;
   }
 
   function toggleAdd() { $('addForm').classList.toggle('hide'); }
+  function toggleSeqAdd() { $('seqAddForm').classList.toggle('hide'); }
 
   function editOp(key, names, phone, langs) {
     var row = $('row-' + key);
@@ -597,6 +640,78 @@
     withButton(btn, 'Sending...', function () {
       return api({ action: 'send-test-signal', message: m }).catch(catcher('Send to group'));
     });
+  };
+
+  // --- Special Call Handling ---------------------------------------------
+  var SEQ_RE = /^[0-9*#wW]+$/;
+
+  // Validate the three inputs of an add/edit row; returns a normalized
+  // {number, pause, sequence} or null (after surfacing the error) on bad input.
+  function readSeqInputs(numId, pauseId, seqId) {
+    var num = $(numId).value.trim();
+    var pause = parseInt($(pauseId).value, 10);
+    var seq = $(seqId).value.trim();
+    if (!/^\+\d{7,15}$/.test(num)) { showError('Enter a valid E.164 number'); return null; }
+    if (!SEQ_RE.test(seq)) { showError('Key sequence may contain only digits, *, #, and w'); return null; }
+    if (isNaN(pause) || pause < 0) pause = 0;
+    if (pause > 60) pause = 60;
+    return { number: num, pause: pause, sequence: seq };
+  }
+
+  function saveSequences(next, label, after) {
+    return api({ action: 'update-connection-sequences', sequences: next })
+      .then(after || function () { })
+      .then(reloadStatus)
+      .catch(catcher(label));
+  }
+
+  window.addSeq = function () {
+    var item = readSeqInputs('sNum', 'sPause', 'sSeq');
+    if (!item) return;
+    var next = (DATA.connectionSequences || []).concat([item]);
+    saveSequences(next, 'Add call handling', function () {
+      $('sNum').value = ''; $('sSeq').value = ''; $('sPause').value = '2'; hide('seqAddForm');
+    });
+  };
+
+  window.editSeq = function (i) {
+    var c = (DATA.connectionSequences || [])[i];
+    if (!c) return;
+    var row = $('seqrow-' + i);
+    row.innerHTML =
+      '<td><input id="eSeqNum" value="' + escapeHtml(c.number) + '" style="width:100%"></td>' +
+      '<td><input id="eSeqPause" type="number" min="0" step="1" value="' + (parseInt(c.pause, 10) || 0) + '" style="width:100%"></td>' +
+      '<td><input id="eSeqSeq" value="' + escapeHtml(c.sequence) + '" style="width:100%"></td>' +
+      '<td style="white-space:nowrap">' +
+      '<button onclick="saveSeq(' + i + ')">Save</button> ' +
+      '<button class="sec" onclick="render()">Cancel</button></td>';
+  };
+
+  window.saveSeq = function (i) {
+    var item = readSeqInputs('eSeqNum', 'eSeqPause', 'eSeqSeq');
+    if (!item) return;
+    var next = (DATA.connectionSequences || []).map(function (c, j) { return j === i ? item : c; });
+    saveSequences(next, 'Update call handling');
+  };
+
+  window.removeSeq = function (i) {
+    if (!confirm('Remove this entry?')) return;
+    var next = (DATA.connectionSequences || []).filter(function (_, j) { return j !== i; });
+    saveSequences(next, 'Remove call handling');
+  };
+
+  window.saveAllowlistOnly = function (cb) {
+    var on = cb.checked;
+    // Turning this on with an empty list would reject every caller — confirm first.
+    if (on && !(DATA.connectionSequences && DATA.connectionSequences.length)) {
+      if (!confirm('The list is empty. Enabling this will reject ALL incoming calls. Continue?')) {
+        cb.checked = false;
+        return;
+      }
+    }
+    api({ action: 'update-allowlist-only', allowlistOnly: on })
+      .then(reloadStatus)
+      .catch(function (e) { cb.checked = !on; reportError('Save allowlist setting', e); });
   };
 
 </script>

@@ -70,6 +70,7 @@ From the admin dashboard you can:
   * **Operators** -- View, add, edit, and remove operators (with name, phone number, and language support)
   * **Blocklist** -- Add or remove blocked phone numbers
   * **Languages** -- Add or remove supported languages for the caller greeting
+  * **Special Call Handling** -- Define key sequences to auto-accept collect-style calls from specific numbers, and optionally restrict the hotline to accept calls only from those numbers
 
 All data is stored securely in Twilio Serverless environment variables.
 

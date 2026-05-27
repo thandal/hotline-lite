@@ -5,9 +5,32 @@ exports.handler = async function (context, event, callback) {
   const languages = context.LANGUAGES.split(',');
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
   const twiml = new Twilio.twiml.VoiceResponse();
-  if (context.BLOCKLIST.split(',').includes(event.From)) {
-    twiml.reject()
-  } else if (!event.Digits && languages.length > 1) {
+
+  // Special call handling. Callers arriving through a collect-call gateway need
+  // a key sequence played to accept the call and connect them; the same list of
+  // numbers doubles as an allowlist when ALLOWLIST_ONLY is enabled.
+  let connectionSequences = [];
+  try { connectionSequences = JSON.parse(context.CONNECTION_SEQUENCES || '[]'); }
+  catch (e) { connectionSequences = []; }
+  if (!Array.isArray(connectionSequences)) connectionSequences = [];
+  const allowlistOnly = context.ALLOWLIST_ONLY === 'true';
+  const callerSequence = connectionSequences.find(s => s && s.number === event.From);
+
+  if (context.BLOCKLIST.split(',').includes(event.From) || (allowlistOnly && !callerSequence)) {
+    twiml.reject();
+    return callback(null, twiml);
+  }
+
+  // On the first inbound request (before any language digit), play the accept
+  // sequence for a collect-call gateway: greet, wait for the system's prompt,
+  // then send the keys that connect the caller.
+  if (!event.Digits && callerSequence) {
+    twiml.say('Hello.');
+    twiml.pause({ length: parseInt(callerSequence.pause, 10) || 0 });
+    twiml.play({ digits: callerSequence.sequence });
+  }
+
+  if (!event.Digits && languages.length > 1) {
     // Update the workers first
     await updateWorkers(context);
     const gather = twiml.gather({ numDigits: 1 });

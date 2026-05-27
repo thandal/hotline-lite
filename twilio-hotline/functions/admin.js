@@ -74,7 +74,13 @@ exports.handler = async function (context, event, callback) {
       const languages = lv ? lv.value.split(',') : [];
       const hv = vars.find(v => v.key === 'HOTLINE_NAME');
       const hotlineName = hv && hv.value ? hv.value.split(',') : [];
-      resp.setBody({ operators, blocklist, languages, hotlineName });
+      const csv = vars.find(v => v.key === 'CONNECTION_SEQUENCES');
+      let connectionSequences = [];
+      if (csv && csv.value) { try { connectionSequences = JSON.parse(csv.value); } catch { connectionSequences = []; } }
+      if (!Array.isArray(connectionSequences)) connectionSequences = [];
+      const av = vars.find(v => v.key === 'ALLOWLIST_ONLY');
+      const allowlistOnly = av ? av.value === 'true' : false;
+      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly });
 
     } else if (event.action === 'add-operator') {
       const key = 'worker' + event.phone.slice(-4);
@@ -126,6 +132,42 @@ exports.handler = async function (context, event, callback) {
       } else {
         await env.variables.create({ key: 'HOTLINE_NAME', value });
       }
+      resp.setBody({ ok: true });
+
+    } else if (event.action === 'update-connection-sequences') {
+      // Special call handling: a single CONNECTION_SEQUENCES var holds the whole
+      // list as JSON [{number, pause, sequence}, ...]. The dashboard edits the
+      // array client-side and posts the full replacement (like blocklist/languages).
+      const E164 = /^\+\d{7,15}$/;
+      const SEQ = /^[0-9*#wW]+$/;  // DTMF digits plus 'w' (0.5s wait) — see <Play digits>
+      const raw = Array.isArray(event.sequences) ? event.sequences : [];
+      const clean = [];
+      for (const item of raw) {
+        const number = ((item && item.number) || '').toString().trim();
+        const sequence = ((item && item.sequence) || '').toString().trim();
+        let pause = parseInt(item && item.pause, 10);
+        if (!Number.isFinite(pause) || pause < 0) pause = 0;
+        if (pause > 60) pause = 60;
+        if (!E164.test(number) || !SEQ.test(sequence)) {
+          resp.setStatusCode(400);
+          resp.setBody({ error: 'Each entry needs a valid E.164 number and a key sequence of digits, *, #, or w' });
+          return callback(null, resp);
+        }
+        clean.push({ number, pause, sequence });
+      }
+      const value = JSON.stringify(clean);
+      const v = vars.find(v => v.key === 'CONNECTION_SEQUENCES');
+      if (v) await env.variables(v.sid).update({ value });
+      else await env.variables.create({ key: 'CONNECTION_SEQUENCES', value });
+      resp.setBody({ ok: true });
+
+    } else if (event.action === 'update-allowlist-only') {
+      // When 'true', hotline.protected.js rejects any caller not present in
+      // CONNECTION_SEQUENCES (an allowlist layered on top of the blocklist).
+      const value = event.allowlistOnly ? 'true' : 'false';
+      const v = vars.find(v => v.key === 'ALLOWLIST_ONLY');
+      if (v) await env.variables(v.sid).update({ value });
+      else await env.variables.create({ key: 'ALLOWLIST_ONLY', value });
       resp.setBody({ ok: true });
 
     } else if (event.action === 'dashboard') {
