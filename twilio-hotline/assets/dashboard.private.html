@@ -142,7 +142,7 @@
 </div>
 
 <div class="card">
-  <h2>Special Call Handling <button onclick="toggleSeqAdd()" style="float:right" class="sec">+ Add</button></h2>
+  <h2>Special Call Handling</h2>
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     Some callers arrive through a collect-call gateway that must be sent a key sequence before the caller is connected.
     For each such number, set the keys to dial and how many seconds to wait for the gateway's prompt first.
@@ -152,7 +152,7 @@
     <input type="checkbox" id="allowlistOnly" onchange="saveAllowlistOnly(this)">
     Only accept calls from the numbers listed below (reject everyone else)
   </label>
-  <div id="seqAddForm" class="row hide">
+  <div class="row">
     <input id="sNum" placeholder="+12025551234">
     <input id="sPause" type="number" min="0" step="1" value="2" style="max-width:90px" placeholder="Pause (s)">
     <input id="sSeq" placeholder="Keys, e.g. 1w#" pattern="[0-9*#wW]+">
@@ -388,7 +388,6 @@
   }
 
   function toggleAdd() { $('addForm').classList.toggle('hide'); }
-  function toggleSeqAdd() { $('seqAddForm').classList.toggle('hide'); }
 
   function editOp(key, names, phone, langs) {
     var row = $('row-' + key);
@@ -670,7 +669,7 @@
     if (!item) return;
     var next = (DATA.connectionSequences || []).concat([item]);
     saveSequences(next, 'Add call handling', function () {
-      $('sNum').value = ''; $('sSeq').value = ''; $('sPause').value = '2'; hide('seqAddForm');
+      $('sNum').value = ''; $('sSeq').value = ''; $('sPause').value = '2';
     });
   };
 
