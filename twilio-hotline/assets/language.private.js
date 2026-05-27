@@ -20,10 +20,11 @@ const langToLangLocale = {
 
 const formatE164 = function (phone) {
   // E.164 to (XXX) XXX-XXXX
+  let formattedPhone = phone;
   if (phone.length == 12) {
-    let formattedPhone = "(" + phone.slice(2, 5) + ") " + phone.slice(5, 8) + "-" + phone.slice(8, 12);
+    formattedPhone = "(" + phone.slice(2, 5) + ") " + phone.slice(5, 8) + "-" + phone.slice(8, 12);
   } else if (phone.length == 11) {
-    let formattedPhone = "(" + phone.slice(1, 4) + ") " + phone.slice(4, 7) + "-" + phone.slice(7, 11);
+    formattedPhone = "(" + phone.slice(1, 4) + ") " + phone.slice(4, 7) + "-" + phone.slice(7, 11);
   }
   return formattedPhone;
 }
