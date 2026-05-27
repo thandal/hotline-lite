@@ -37,22 +37,15 @@ exports.handler = async function (context, event, callback) {
   } else if (event.Digits == 2) {
     // Add to blocklist
     const client = context.getTwilioClient();
-    const variables = await client.serverless.v1.services(context.SERVICE_SID)
-      .environments(context.ENVIRONMENT_SID)
-      .variables.list();
-    let blockListSid = "";
-    for (let i = 0; i < variables.length; i++) {
-      const v = variables[i];
-      if (v.key == "BLOCKLIST") {
-        blockListSid = v.sid;
-        break;
-      }
-    }
-    const blockList = (context.BLOCKLIST == "null") ? event.callerFrom : context.BLOCKLIST + "," + event.callerFrom;
-    await client.serverless.v1.services(context.SERVICE_SID)
-      .environments(context.ENVIRONMENT_SID)
-      .variables(blockListSid)
-      .update({ value: blockList });
+    const env = client.serverless.v1.services(context.SERVICE_SID)
+      .environments(context.ENVIRONMENT_SID);
+    const existing = (await env.variables.list()).find(v => v.key == "BLOCKLIST");
+    // Treat unset/empty/'null' as an empty list, then append the caller. Create
+    // the variable if it doesn't exist yet (it isn't pre-provisioned by setup).
+    const current = (!context.BLOCKLIST || context.BLOCKLIST == "null") ? "" : context.BLOCKLIST;
+    const blockList = current ? current + "," + event.callerFrom : event.callerFrom;
+    if (existing) await env.variables(existing.sid).update({ value: blockList });
+    else await env.variables.create({ key: "BLOCKLIST", value: blockList });
     sayLangMap(
       twiml,
       event.language,

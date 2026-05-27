@@ -16,7 +16,13 @@ exports.handler = async function (context, event, callback) {
   const allowlistOnly = context.ALLOWLIST_ONLY === 'true';
   const callerSequence = connectionSequences.find(s => s && s.number === event.From);
 
-  if (context.BLOCKLIST.split(',').includes(event.From) || (allowlistOnly && !callerSequence)) {
+  // BLOCKLIST may be unset (it isn't pre-provisioned), empty, or the 'null'
+  // sentinel admin writes for an empty list — guard the split so a missing var
+  // can't crash every call.
+  const blocklist = (!context.BLOCKLIST || context.BLOCKLIST === 'null')
+    ? [] : context.BLOCKLIST.split(',').filter(Boolean);
+
+  if (blocklist.includes(event.From) || (allowlistOnly && !callerSequence)) {
     twiml.reject();
     return callback(null, twiml);
   }

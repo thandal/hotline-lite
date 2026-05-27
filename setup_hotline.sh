@@ -175,22 +175,6 @@ then
 fi
 #echo Environment SID: $ENVIRONMENT_SID
 
-# Check for an existing blocklist
-BLOCKLIST_SID=`twilio api:serverless:v1:services:environments:variables:list \
-    --service-sid $SERVICE_SID \
-    --environment-sid $ENVIRONMENT_SID \
-    | grep "BLOCKLIST" | awk '{ print $1 }'`
-if [ ${#BLOCKLIST_SID} != 34 ]
-then
-    BLOCKLIST_SID=`twilio api:serverless:v1:services:environments:variables:create \
-        --service-sid $SERVICE_SID \
-        --environment-sid $ENVIRONMENT_SID \
-        --key "BLOCKLIST" \
-        --value "null" \
-        | tail -n 1 | awk '{ print $1 }'`
-fi
-#echo Blocklist SID: $BLOCKLIST_SID
-
 # Configure the workspace workflow (assignment-callback-url is a little brittle!)
 # Most phones go to voicemail after 20 seconds, so we set the task reservation timeout to avoid that.
 echo  # (optional) move to a new line
