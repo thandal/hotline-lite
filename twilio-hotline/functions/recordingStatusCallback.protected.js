@@ -2,17 +2,16 @@ exports.handler = async function (context, event, callback) {
   console.log('/recordingStatusCallback ' + event.RecordingUrl);
   const { langToLangLocale, formatE164 } = require(Runtime.getAssets()['/language.js'].path);
   const axios = require('axios');
-  const https = require('https');
   const fs = require('fs');
   const tmp_dir = require('os').tmpdir();
   const recordingResponse = await axios.get(event.RecordingUrl + '.mp3',
-                                            {
-                                              auth: {
-                                                username: context.ACCOUNT_SID,
-                                                password: context.AUTH_TOKEN,
-                                              },
-                                              responseType: 'arraybuffer',
-                                            },
+    {
+      auth: {
+        username: context.ACCOUNT_SID,
+        password: context.AUTH_TOKEN,
+      },
+      responseType: 'arraybuffer',
+    },
   );
   const recordingStartTime = new Date(event.RecordingStartTime);
   // Colons are not filesystem/Dropbox-safe, so strip them out of the ISO timestamp.
