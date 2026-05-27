@@ -299,6 +299,52 @@ fi
 # echo ICS URL SID: $ICS_URL_SID
 echo "ICS_URL=\"$ICS_URL\"" >> twilio-hotline/.env
 
+# Set the admin panel password (used by functions/admin.js for /admin login)
+echo  # (optional) move to a new line
+echo "Configuring the admin panel password..."
+ADMIN_PASSWORD_SID=`twilio api:serverless:v1:services:environments:variables:list \
+    --service-sid $SERVICE_SID \
+    --environment-sid $ENVIRONMENT_SID \
+    | grep "ADMIN_PASSWORD" | awk '{ print $1 }'`
+if [ ${#ADMIN_PASSWORD_SID} == 34 ]
+then
+    # Already configured: press enter to keep the current password, or type a new one to replace it.
+    read -s -p "An admin password is already set. Enter a new one to replace it, or press enter to keep the current one: " ADMIN_PASSWORD
+    echo    # (optional) move to a new line
+    if [[ -n "$ADMIN_PASSWORD" ]]
+    then
+        twilio api:serverless:v1:services:environments:variables:update \
+            --service-sid $SERVICE_SID \
+            --environment-sid $ENVIRONMENT_SID \
+            --sid $ADMIN_PASSWORD_SID \
+            --key "ADMIN_PASSWORD" \
+            --value "$ADMIN_PASSWORD" > /dev/null
+        echo "Admin password updated."
+    else
+        echo "Keeping the existing admin password."
+    fi
+else
+    # Not configured yet: require a non-empty password.
+    ADMIN_PASSWORD=""
+    while [[ -z "$ADMIN_PASSWORD" ]]
+    do
+        read -s -p "Enter a password for the hotline admin panel: " ADMIN_PASSWORD
+        echo    # (optional) move to a new line
+        if [[ -z "$ADMIN_PASSWORD" ]]
+        then
+            echo "Password cannot be empty. Please try again."
+        fi
+    done
+    ADMIN_PASSWORD_SID=`twilio api:serverless:v1:services:environments:variables:create \
+        --service-sid $SERVICE_SID \
+        --environment-sid $ENVIRONMENT_SID \
+        --key "ADMIN_PASSWORD" \
+        --value "$ADMIN_PASSWORD" \
+        | tail -n 1 | awk '{ print $1 }'`
+    echo "Admin password set."
+fi
+#echo Admin password SID: $ADMIN_PASSWORD_SID
+
 # Deploy the service again to pick up any changes to environment variables
 echo "Re-deploying the service with configuration..."
 (cd twilio-hotline; twilio serverless:deploy)
