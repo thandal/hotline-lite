@@ -28,6 +28,15 @@ async function ensureSyncService(client, env, vars) {
 
 const fs = require('fs');
 
+// Usage panel: top-level categories only. Twilio's categories are hierarchical
+// (e.g. `calls` already includes calls-inbound/outbound), so summing children
+// alongside parents would double-count the total.
+const USAGE_CATEGORIES = [
+  { category: 'calls', label: 'Calls' },
+  { category: 'sms', label: 'Messages' },
+  { category: 'recordings', label: 'Recordings' },
+];
+
 exports.handler = async function (context, event, callback) {
   const resp = new Twilio.Response();
   resp.appendHeader('Content-Type', 'application/json');
@@ -80,7 +89,35 @@ exports.handler = async function (context, event, callback) {
       if (!Array.isArray(connectionSequences)) connectionSequences = [];
       const av = vars.find(v => v.key === 'ALLOWLIST_ONLY');
       const allowlistOnly = av ? av.value === 'true' : false;
-      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly });
+
+      // Usage summary for the dashboard. Isolated so a usage-API failure leaves
+      // the rest of the status payload intact. The base records resource defaults
+      // to all-time totals; a startDate gives the trailing-30-day window.
+      let usage = [];
+      try {
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const [recent, allTime] = await Promise.all([
+          client.usage.records.list({ startDate: since, pageSize: 1000 }),
+          client.usage.records.list({ pageSize: 1000 }),
+        ]);
+        const byCategory = list => list.reduce((m, u) => (m[u.category] = u, m), {});
+        const r30 = byCategory(recent);
+        const rAll = byCategory(allTime);
+        usage = USAGE_CATEGORIES.map(({ category, label }) => {
+          const n = r30[category] || {};
+          const a = rAll[category] || {};
+          return {
+            label,
+            usageUnit: a.usageUnit || n.usageUnit || '',
+            last30: { usage: Number(n.usage) || 0, price: Number(n.price) || 0 },
+            total: { usage: Number(a.usage) || 0, price: Number(a.price) || 0 },
+          };
+        });
+      } catch (e) {
+        console.error('usage_fetch_failed ' + (e.message || e));
+      }
+
+      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, usage });
 
     } else if (event.action === 'add-operator') {
       const key = 'worker' + event.phone.slice(-4);

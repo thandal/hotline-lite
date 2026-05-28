@@ -275,6 +275,26 @@
   </div>
 </div>
 
+<div class="card">
+  <h2>Usage</h2>
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="2">Category</th>
+        <th colspan="2">Last 30 days</th>
+        <th colspan="2">Total ever</th>
+      </tr>
+      <tr>
+        <th>Usage</th>
+        <th>Cost</th>
+        <th>Usage</th>
+        <th>Cost</th>
+      </tr>
+    </thead>
+    <tbody id="uBody"></tbody>
+  </table>
+</div>
+
 <script>
   var DATA = {};
 
@@ -393,6 +413,30 @@
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
     }).join('') : '<tr><td colspan="4" style="color:#999">None</td></tr>';
     if ($('allowlistOnly')) $('allowlistOnly').checked = !!DATA.allowlistOnly;
+
+    renderUsage();
+  }
+
+  function fmtUsd(n) { return '$' + (Number(n) || 0).toFixed(2); }
+
+  function renderUsage() {
+    var rows = DATA.usage || [];
+    if (!rows.length) {
+      $('uBody').innerHTML = '<tr><td colspan="5" style="color:#999">No usage data</td></tr>';
+      return;
+    }
+    var total30 = 0, totalEver = 0;
+    var html = rows.map(function (r) {
+      total30 += r.last30.price;
+      totalEver += r.total.price;
+      var unit = r.usageUnit ? ' ' + r.usageUnit : '';
+      return '<tr><td>' + escapeHtml(r.label) + '</td>' +
+        '<td>' + r.last30.usage + unit + '</td><td>' + fmtUsd(r.last30.price) + '</td>' +
+        '<td>' + r.total.usage + unit + '</td><td>' + fmtUsd(r.total.price) + '</td></tr>';
+    }).join('');
+    html += '<tr style="font-weight:600"><td>Total</td><td></td><td>' + fmtUsd(total30) +
+      '</td><td></td><td>' + fmtUsd(totalEver) + '</td></tr>';
+    $('uBody').innerHTML = html;
   }
 
   function toggleAdd() { $('addForm').classList.toggle('hide'); }
