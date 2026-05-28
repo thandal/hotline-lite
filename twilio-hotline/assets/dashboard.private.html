@@ -146,7 +146,8 @@
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     Some callers arrive through a collect-call gateway that must be sent a key sequence before the caller is connected.
     For each such number, set the keys to dial and how many seconds to wait for the gateway's prompt first.
-    Sequences may contain digits, <code>*</code>, <code>#</code>, and <code>w</code> (a 0.5&nbsp;s pause).
+    Sequences may contain digits, <code>*</code>, <code>#</code>, <code>w</code>
+    (a 0.5&nbsp;s pause), and <code>W</code> (a 1&nbsp;s pause).
   </p>
   <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px">
     <input type="checkbox" id="allowlistOnly" onchange="saveAllowlistOnly(this)">
@@ -210,12 +211,14 @@
       <button onclick="sigRegister(this)">Register</button>
     </div>
     <p style="font-size:12px;color:#888;margin-top:8px">
-      Registration sends a verification SMS to the hotline number; this page auto-detects it from Twilio's message log and completes the flow. Allow ~10 seconds.
+      Registration sends a verification SMS to the hotline number; this page auto-detects it from Twilio's message log
+      and completes the flow. Allow ~10 seconds.
     </p>
 
     <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Or upload an existing keystore</h3>
     <p style="font-size:12px;color:#888;margin-bottom:6px">
-      Skip registration if you already have a valid <code>presage.db</code> from a previous session. Upload replaces whatever is in Twilio Sync.
+      Skip registration if you already have a valid <code>presage.db</code> from a previous session. Upload replaces
+      whatever is in Twilio Sync.
     </p>
     <div class="row">
       <input id="sigRegUploadFile" type="file" accept=".db" style="align-self:center;font-size:12px">
@@ -234,7 +237,8 @@
     <div id="sigActiveGroup" style="font-size:13px;color:#555;margin-bottom:8px"></div>
     <div class="row" style="align-items:center">
       <button class="sec" onclick="sigListGroups(this)">Refresh group list</button>
-      <span style="font-size:12px;color:#888">Syncs with Signal, then lists groups. The bot must have been invited and received at least one group message first.</span>
+      <span style="font-size:12px;color:#888">Syncs with Signal, then lists groups. The bot must have been invited and
+        received at least one group message first.</span>
     </div>
     <div id="sigGroups" style="margin-top:8px"></div>
 
@@ -249,7 +253,8 @@
 
     <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Keystore import / export</h3>
     <p style="font-size:12px;color:#888;margin-bottom:6px">
-      Download the decrypted SQLite DB to run presage-cli locally (diagnostics). Upload replaces the Sync keystore with a DB you've modified locally.
+      Download the decrypted SQLite DB to run presage-cli locally (diagnostics). Upload replaces the Sync keystore with
+      a DB you've modified locally.
     </p>
     <div class="row">
       <button class="sec" onclick="sigDownloadDb(this)">Download DB</button>
@@ -260,10 +265,13 @@
     <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Danger zone</h3>
     <div class="row">
       <button class="del" onclick="sigReset(this)">Reset keystore &amp; re-register</button>
-      <span style="font-size:12px;color:#888;align-self:center">Wipes the Signal keystore from Twilio Sync. Use only if the bot is stuck.</span>
+      <span style="font-size:12px;color:#888;align-self:center">Wipes the Signal keystore from Twilio Sync. Use only if
+        the bot is stuck.</span>
     </div>
 
-    <div id="sigDebug" style="font-size:11px;color:#aaa;margin-top:16px;padding-top:8px;border-top:1px solid #eee;font-family:ui-monospace,monospace"></div>
+    <div id="sigDebug"
+      style="font-size:11px;color:#aaa;margin-top:16px;padding-top:8px;border-top:1px solid #eee;font-family:ui-monospace,monospace">
+    </div>
   </div>
 </div>
 
