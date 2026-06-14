@@ -1,4 +1,4 @@
-// NOTE: Languages are by default mapped to voices by the Twilio settings here: https://console.twilio.com/us1/develop/voice/settings/text-to-speech
+// lang2 -> [locale, display name].
 const langToLangLocale = {
   en: ['en-US', 'English'],
   es: ['es-MX', 'Spanish'],
@@ -18,6 +18,35 @@ const langToLangLocale = {
   vi: ['vi-VN', 'Vietnamese'],
 };
 
+// Default text-to-speech voice per language. Without an explicit voice, Twilio
+// uses the account-level default for the locale (configurable in the console at
+// https://console.twilio.com/us1/develop/voice/settings/text-to-speech), which
+// for most languages is a low-quality, choppy "standard" voice. Setting a voice
+// here gives every deployment a good caller experience without per-account
+// setup. Languages omitted here fall back to that locale default.
+//
+// Values are Twilio voice identifiers (https://www.twilio.com/docs/voice/twiml/say/text-speech).
+// These are Amazon Polly "Neural" voices — a good quality/cost balance; swap in
+// Polly "-Generative" or "Google.<locale>-Chirp3-HD-*" voices for the most
+// natural output. Languages with no high-quality Twilio voice (ht, ku, ti, sw,
+// uk, rw, ru, am, fa, vi) are left to the locale default for now.
+const langToVoice = {
+  en: 'Polly.Joanna-Neural',   // en-US
+  es: 'Polly.Mia-Neural',      // es-MX
+  fr: 'Polly.Lea-Neural',      // fr-FR
+  pt: 'Polly.Camila-Neural',   // pt-BR
+  zh: 'Polly.Zhiyu-Neural',    // cmn-CN (Mandarin)
+  ar: 'Polly.Hala-Neural',     // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
+};
+
+// Build the attributes object for a TwiML <Say>: always sets the language
+// locale, and adds the configured voice when one exists for the language.
+const sayAttrs = function (lang2) {
+  const attrs = { language: langToLangLocale[lang2][0] };
+  if (langToVoice[lang2]) attrs.voice = langToVoice[lang2];
+  return attrs;
+};
+
 const formatE164 = function (phone) {
   // E.164 to (XXX) XXX-XXXX
   let formattedPhone = phone;
@@ -34,7 +63,7 @@ const formatE164 = function (phone) {
 const sayLangMap = function (twiml, lang2, message, phone = "") {
   const messageParts = message.split("{number}");
   for (let i = 0; i < messageParts.length; i++) {
-    const say = twiml.say({ language: langToLangLocale[lang2][0] }, messageParts[i]);
+    const say = twiml.say(sayAttrs(lang2), messageParts[i]);
     if (i < messageParts.length - 1) {
       const formattedPhone = formatE164(phone);
       say.sayAs({ "interpret-as": "telephone" }, formattedPhone);
@@ -116,4 +145,4 @@ const messagesMap = {
 const ES_MESSAGES = messagesMap.es;
 const EN_MESSAGES = messagesMap.en;
 
-module.exports = { langToLangLocale, sayLangMap, messagesMap, formatE164 };
+module.exports = { langToLangLocale, sayAttrs, sayLangMap, messagesMap, formatE164 };
