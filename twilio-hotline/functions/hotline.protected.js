@@ -1,6 +1,6 @@
 
 exports.handler = async function (context, event, callback) {
-  const { langToLangLocale, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
   const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   const languages = context.LANGUAGES.split(',');
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
@@ -29,8 +29,9 @@ exports.handler = async function (context, event, callback) {
 
   // On the first inbound request (before any language digit), play the accept
   // sequence for a collect-call gateway: greet, wait for the system's prompt,
-  // then send the keys that connect the caller.
-  if (!event.Digits && callerSequence) {
+  // then send the keys that connect the caller. A blank sequence means the
+  // number is only allow-listed (no gateway), so there is nothing to play.
+  if (!event.Digits && callerSequence && callerSequence.sequence) {
     twiml.say('Hello.');
     twiml.pause({ length: parseInt(callerSequence.pause, 10) || 0 });
     twiml.play({ digits: callerSequence.sequence });
@@ -44,7 +45,7 @@ exports.handler = async function (context, event, callback) {
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
         const key = String(i + 1);
-        gather.say({ language: langToLangLocale[languages[i]][0] }, messagesMap[languages[i]].caller.welcome.hello.replace('{name}', hotlineName[i]));
+        gather.say(sayAttrs(languages[i]), messagesMap[languages[i]].caller.welcome.hello.replace('{name}', hotlineName[i]));
         sayLangMap(
           gather,
           languages[i],
@@ -55,13 +56,13 @@ exports.handler = async function (context, event, callback) {
       gather.pause({ length: 1 });
     }
     // If no response happens within the gather timeout, say goodbye in the default language and hang up:
-    twiml.say({ language: langToLangLocale[languages[0]][0] }, messagesMap[languages[0]].caller.welcome.goodbye);
+    twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
   } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1) {
     var key = languages[0];
     if (languages.length == 1) {
       // No language selection needed if there is just one language!
-      twiml.say({ language: langToLangLocale[key][0] }, messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
+      twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed
@@ -77,7 +78,7 @@ exports.handler = async function (context, event, callback) {
     }).task({}, JSON.stringify({ language: key }));
     twiml.hangup();
   } else {
-    twiml.say({ language: langToLangLocale[languages[0]][0] }, messagesMap[languages[0]].caller.welcome.goodbye);
+    twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
   }
   return callback(null, twiml);

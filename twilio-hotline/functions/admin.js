@@ -176,7 +176,7 @@ exports.handler = async function (context, event, callback) {
       // list as JSON [{number, pause, sequence}, ...]. The dashboard edits the
       // array client-side and posts the full replacement (like blocklist/languages).
       const E164 = /^\+\d{7,15}$/;
-      const SEQ = /^[0-9*#wW]+$/;  // DTMF digits plus 'w' (0.5s wait) — see <Play digits>
+      const SEQ = /^[0-9*#wW]*$/;  // DTMF digits plus 'w' (0.5s wait) — see <Play digits>; empty = allow-list-only entry
       const raw = Array.isArray(event.sequences) ? event.sequences : [];
       const clean = [];
       for (const item of raw) {
@@ -187,7 +187,7 @@ exports.handler = async function (context, event, callback) {
         if (pause > 60) pause = 60;
         if (!E164.test(number) || !SEQ.test(sequence)) {
           resp.setStatusCode(400);
-          resp.setBody({ error: 'Each entry needs a valid E.164 number and a key sequence of digits, *, #, or w' });
+          resp.setBody({ error: 'Each entry needs a valid E.164 number; the optional key sequence may contain only digits, *, #, or w' });
           return callback(null, resp);
         }
         clean.push({ number, pause, sequence });
@@ -234,8 +234,7 @@ exports.handler = async function (context, event, callback) {
       const signal = require(Runtime.getAssets()['/signalOps.js'].path);
       const groupKeyVar = vars.find(v => v.key === 'GROUP_KEY');
       const activeGroupKey = groupKeyVar ? groupKeyVar.value : null;
-      const numbers = await client.incomingPhoneNumbers.list({ limit: 1 });
-      const hotlinePhone = numbers[0] ? numbers[0].phoneNumber : null;
+      const hotlinePhone = (context.HOTLINE_PHONE_NUMBER || '').trim() || null;
       const syncSid = await ensureSyncService(client, env, vars);
       context.SYNC_SERVICE_SID = syncSid;
 
@@ -289,11 +288,10 @@ exports.handler = async function (context, event, callback) {
       if (!captcha.startsWith('signalcaptcha://')) {
         resp.setStatusCode(400); resp.setBody({ error: 'captcha must be a signalcaptcha:// URL from signalcaptchas.org' }); return callback(null, resp);
       }
-      const numbers = await client.incomingPhoneNumbers.list({ limit: 1 });
-      if (!numbers[0]) {
-        resp.setStatusCode(400); resp.setBody({ error: 'no incoming phone number found on this Twilio account' }); return callback(null, resp);
+      const phone = (context.HOTLINE_PHONE_NUMBER || '').trim();
+      if (!phone) {
+        resp.setStatusCode(400); resp.setBody({ error: 'HOTLINE_PHONE_NUMBER not configured; re-run setup_hotline.sh to select a number' }); return callback(null, resp);
       }
-      const phone = numbers[0].phoneNumber;
       const syncSid = await ensureSyncService(client, env, vars);
       context.SYNC_SERVICE_SID = syncSid;
       const signal = require(Runtime.getAssets()['/signalOps.js'].path);

@@ -148,6 +148,7 @@
     For each such number, set the keys to dial and how many seconds to wait for the gateway's prompt first.
     Sequences may contain digits, <code>*</code>, <code>#</code>, <code>w</code>
     (a 0.5&nbsp;s pause), and <code>W</code> (a 1&nbsp;s pause).
+    Leave the key sequence blank to simply allow a number (no gateway) &mdash; useful with the allow-list option below.
   </p>
   <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px">
     <input type="checkbox" id="allowlistOnly" onchange="saveAllowlistOnly(this)">
@@ -156,7 +157,7 @@
   <div class="row">
     <input id="sNum" placeholder="+12025551234">
     <input id="sPause" type="number" min="0" step="1" value="2" style="max-width:90px" placeholder="Pause (s)">
-    <input id="sSeq" placeholder="Keys, e.g. 1w#" pattern="[0-9*#wW]+">
+    <input id="sSeq" placeholder="Keys, e.g. 1w# (blank = allow only)" pattern="[0-9*#wW]*">
     <button onclick="addSeq()">Add</button>
   </div>
   <table>
@@ -407,7 +408,7 @@
       return '<tr id="seqrow-' + i + '">' +
         '<td>' + escapeHtml(c.number) + '</td>' +
         '<td>' + (parseInt(c.pause, 10) || 0) + '</td>' +
-        '<td>' + escapeHtml(c.sequence) + '</td>' +
+        '<td>' + (c.sequence ? escapeHtml(c.sequence) : '<span style="color:#999">(allow only)</span>') + '</td>' +
         '<td style="white-space:nowrap">' +
         '<button class="sec" onclick="editSeq(' + i + ')">Edit</button> ' +
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
@@ -694,7 +695,7 @@
   };
 
   // --- Special Call Handling ---------------------------------------------
-  var SEQ_RE = /^[0-9*#wW]+$/;
+  var SEQ_RE = /^[0-9*#wW]*$/;  // empty allowed: a blank sequence = allow-list-only entry
 
   // Validate the three inputs of an add/edit row; returns a normalized
   // {number, pause, sequence} or null (after surfacing the error) on bad input.
