@@ -133,6 +133,19 @@
 </div>
 
 <div class="card">
+  <h2>Calendar</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    The iCalendar (ICS) feed that determines who is on call. On each incoming call, events happening now
+    whose titles match an operator's name mark that operator available; a location of "backup" or "secondary"
+    makes them a fallback. Leave blank to disable schedule-based availability.
+  </p>
+  <div class="row">
+    <input id="icsUrl" placeholder="https://calendar.example.com/feed.ics" autocomplete="off">
+    <button onclick="saveIcsUrl(this)">Save</button>
+  </div>
+</div>
+
+<div class="card">
   <h2>Blocklist</h2>
   <div id="blockList"></div>
   <div class="row">
@@ -413,6 +426,7 @@
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
     }).join('') : '<tr><td colspan="4" style="color:#999">None</td></tr>';
     if ($('allowlistOnly')) $('allowlistOnly').checked = !!DATA.allowlistOnly;
+    if ($('icsUrl')) $('icsUrl').value = DATA.icsUrl || '';
 
     renderUsage();
   }
@@ -682,6 +696,24 @@
       return api({ action: 'update-hotline-name', hotlineName: filled.length ? names : [] })
         .then(reloadStatus)
         .catch(catcher('Save hotline name'));
+    });
+  };
+
+  window.saveIcsUrl = function (btn) {
+    var url = $('icsUrl').value.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      return showError('Enter an http(s) URL, or leave blank to disable');
+    }
+    // Clearing the feed leaves worker sync with nothing to fetch, which breaks
+    // the on-call schedule — confirm before removing it.
+    if (!url && DATA.icsUrl &&
+        !confirm('Clear the calendar feed? Operator availability will no longer follow a schedule.')) {
+      return;
+    }
+    withButton(btn, 'Saving...', function () {
+      return api({ action: 'update-ics-url', icsUrl: url })
+        .then(reloadStatus)
+        .catch(catcher('Save calendar'));
     });
   };
 
