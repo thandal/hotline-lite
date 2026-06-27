@@ -31,9 +31,13 @@ exports.handler = async function (context, event, callback) {
   // sequence for a collect-call gateway: greet, wait for the system's prompt,
   // then send the keys that connect the caller.
   if (!event.Digits && callerSequence) {
-    twiml.say('Hello.');
-    twiml.pause({ length: parseInt(callerSequence.pause, 10) || 0 });
-    twiml.play({ digits: callerSequence.sequence });
+    if (callerSequence.pause) {
+      twiml.say('Hello.');
+      twiml.pause({ length: parseInt(callerSequence.pause, 10) || 0 });
+    }
+    if (callerSequence.sequence) {
+      twiml.play({ digits: callerSequence.sequence });
+    }
   }
 
   if (!event.Digits && languages.length > 1) {
