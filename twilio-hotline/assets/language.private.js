@@ -1,21 +1,21 @@
 // NOTE: Languages are by default mapped to voices by the Twilio settings here: https://console.twilio.com/us1/develop/voice/settings/text-to-speech
-const langToLangLocale = {
-  en: ['en-US', 'English'],
-  es: ['es-MX', 'Spanish'],
-  fr: ['fr-FR', 'French'],
-  pt: ['pt-BR', 'Portuguese'],
-  ht: ['ht-HT', 'Haitian Creole'],
-  zh: ['zh-CN', 'Chinese'],
-  ar: ['ar-IQ', 'Arabic'],
-  ku: ['ku-IQ', 'Kurdish'],
-  ti: ['ti-ET', 'Tigrinya'],
-  sw: ['sw-KE', 'Swahili'],
-  uk: ['uk-UA', 'Ukrainian'],
-  rw: ['rw-RW', 'Kinyarwanda'],
-  ru: ['ru-RU', 'Russian'],
-  am: ['am-ET', 'Amharic'],
-  fa: ['fa-AF', 'Dari'],
-  vi: ['vi-VN', 'Vietnamese'],
+const langMap = {
+  en: { locale: 'en-US', name: 'English', voice: 'Polly.Joanna-Generative' },
+  es: { locale: 'es-MX', name: 'Spanish', voice: 'Polly.Lupe-Generative' },
+  fr: { locale: 'fr-FR', name: 'French', voice: 'Polly.Lea-Generative' },
+  pt: { locale: 'pt-BR', name: 'Portuguese', voice: 'Polly.Thiago-Neural' },
+  ht: { locale: 'ht-HT', name: 'Haitian Creole', voice: 'Polly.Lupe-Generative' },
+  zh: { locale: 'zh-CN', name: 'Chinese', voice: 'Polly.Zhiyu-Generative' },
+  ar: { locale: 'ar-IQ', name: 'Arabic', voice: 'Polly.Hala-Neural' },
+  ku: { locale: 'ku-IQ', name: 'Kurdish', voice: 'Polly.Hala-Neural' },
+  ti: { locale: 'ti-ET', name: 'Tigrinya', voice: 'Polly.Hala-Neural' },
+  sw: { locale: 'sw-KE', name: 'Swahili', voice: 'Polly.Hala-Neural' },
+  uk: { locale: 'uk-UA', name: 'Ukrainian', voice: 'Polly.Tatyana' },
+  rw: { locale: 'rw-RW', name: 'Kinyarwanda', voice: 'Polly.Hala-Neural' },
+  ru: { locale: 'ru-RU', name: 'Russian', voice: 'Polly.Tatyana' },
+  am: { locale: 'am-ET', name: 'Amharic', voice: 'Polly.Hala-Neural' },
+  fa: { locale: 'fa-AF', name: 'Dari', voice: 'Polly.Hala-Neural' },
+  vi: { locale: 'vi-VN', name: 'Vietnamese', voice: 'Polly.Zhiyu-Generative' },
 };
 
 const formatE164 = function (phone) {
@@ -34,7 +34,7 @@ const formatE164 = function (phone) {
 const sayLangMap = function (twiml, lang2, message, phone = "") {
   const messageParts = message.split("{number}");
   for (let i = 0; i < messageParts.length; i++) {
-    const say = twiml.say({ language: langToLangLocale[lang2][0] }, messageParts[i]);
+    const say = twiml.say({ language: langMap[lang2].locale, voice: langMap[lang2].voice }, messageParts[i]);
     if (i < messageParts.length - 1) {
       const formattedPhone = formatE164(phone);
       say.sayAs({ "interpret-as": "telephone" }, formattedPhone);
@@ -116,4 +116,4 @@ const messagesMap = {
 const ES_MESSAGES = messagesMap.es;
 const EN_MESSAGES = messagesMap.en;
 
-module.exports = { langToLangLocale, sayLangMap, messagesMap, formatE164 };
+module.exports = { langMap, sayLangMap, messagesMap, formatE164 };

@@ -1,6 +1,6 @@
 exports.handler = async function (context, event, callback) {
   console.log('/recordingStatusCallback ' + event.RecordingUrl);
-  const { langToLangLocale, formatE164 } = require(Runtime.getAssets()['/language.js'].path);
+  const { langMap, formatE164 } = require(Runtime.getAssets()['/language.js'].path);
   const axios = require('axios');
   const fs = require('fs');
   const tmp_dir = require('os').tmpdir();
@@ -20,7 +20,7 @@ exports.handler = async function (context, event, callback) {
   const attachment_path = tmp_dir + '/' + attachment_filename;
   fs.writeFileSync(attachment_path, recordingResponse.data);
   const { notify } = require(Runtime.getAssets()['/notify.js'].path);
-  const languageName = langToLangLocale[event.language] ? langToLangLocale[event.language][1] : event.language;
+  const languageName = langMap[event.language] ? langMap[event.language].name : event.language;
   await notify(context, 'New voice memo in ' + languageName + ' from ' + formatE164(event.callerFrom), attachment_path);
   return callback(null, 'OK');
 }
