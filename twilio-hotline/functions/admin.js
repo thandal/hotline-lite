@@ -256,8 +256,8 @@ exports.handler = async function (context, event, callback) {
       const signal = require(Runtime.getAssets()['/signalOps.js'].path);
       const groupKeyVar = vars.find(v => v.key === 'GROUP_KEY');
       const activeGroupKey = groupKeyVar ? groupKeyVar.value : null;
-      const numbers = await client.incomingPhoneNumbers.list({ limit: 1 });
-      const hotlinePhone = numbers[0] ? numbers[0].phoneNumber : null;
+      const numberResource = await client.incomingPhoneNumbers.list({ phoneNumber: context.HOTLINE_PHONE_NUMBER, limit: 1 });
+      const hotlinePhone = numberResource[0] ? numberResource[0].phoneNumber : null;
       const syncSid = await ensureSyncService(client, env, vars);
       context.SYNC_SERVICE_SID = syncSid;
 
