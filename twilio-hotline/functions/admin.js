@@ -178,7 +178,7 @@ exports.handler = async function (context, event, callback) {
       // list as JSON [{number, pause, sequence}, ...]. The dashboard edits the
       // array client-side and posts the full replacement (like blocklist/languages).
       const E164 = /^\+\d{7,15}$/;
-      const SEQ = /^[0-9*#wW]+$/;  // DTMF digits plus 'w' (0.5s wait) — see <Play digits>
+      const SEQ = /^[0-9*#wW]*$/;  // DTMF digits plus 'w' (0.5s wait) — see <Play digits>
       const raw = Array.isArray(event.sequences) ? event.sequences : [];
       const clean = [];
       for (const item of raw) {

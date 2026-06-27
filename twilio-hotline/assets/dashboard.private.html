@@ -168,8 +168,8 @@
   </label>
   <div class="row">
     <input id="sNum" placeholder="+12025551234">
-    <input id="sPause" type="number" min="0" step="1" value="2" style="max-width:90px" placeholder="Pause (s)">
-    <input id="sSeq" placeholder="Keys, e.g. 1w#" pattern="[0-9*#wW]+">
+    <input id="sPause" type="number" min="0" step="1" style="max-width:90px" placeholder="Pause (s)">
+    <input id="sSeq" placeholder="Keys, e.g. 1w#" pattern="[0-9*#wW]*">
     <button onclick="addSeq()">Add</button>
   </div>
   <table>
@@ -726,7 +726,7 @@
   };
 
   // --- Special Call Handling ---------------------------------------------
-  var SEQ_RE = /^[0-9*#wW]+$/;
+  var SEQ_RE = /^[0-9*#wW]*$/;
 
   // Validate the three inputs of an add/edit row; returns a normalized
   // {number, pause, sequence} or null (after surfacing the error) on bad input.
