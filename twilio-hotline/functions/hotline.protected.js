@@ -43,8 +43,15 @@ exports.handler = async function (context, event, callback) {
   }
 
   if (!event.Digits && languages.length > 1) {
-    // Update the workers first
-    await updateWorkers(context);
+    // Update the workers first. Worker sync is a best-effort refresh, never a
+    // gate on the call: if it throws, TaskRouter still holds the roster from the
+    // last successful sync, so answer the caller and let the error surface in the
+    // logs rather than dropping them.
+    try {
+      await updateWorkers(context);
+    } catch (e) {
+      console.error('update_workers_failed ' + (e.message || e));
+    }
     const gather = twiml.gather({ numDigits: 1 });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
