@@ -89,6 +89,8 @@ exports.handler = async function (context, event, callback) {
       if (!Array.isArray(connectionSequences)) connectionSequences = [];
       const av = vars.find(v => v.key === 'ALLOWLIST_ONLY');
       const allowlistOnly = av ? av.value === 'true' : false;
+      const iv = vars.find(v => v.key === 'ICS_URL');
+      const icsUrl = iv ? iv.value : '';
 
       // Usage summary for the dashboard. Isolated so a usage-API failure leaves
       // the rest of the status payload intact. The base records resource defaults
@@ -117,7 +119,7 @@ exports.handler = async function (context, event, callback) {
         console.error('usage_fetch_failed ' + (e.message || e));
       }
 
-      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, usage });
+      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
 
     } else if (event.action === 'add-operator') {
       const key = 'worker' + event.phone.slice(-4);
@@ -205,6 +207,26 @@ exports.handler = async function (context, event, callback) {
       const v = vars.find(v => v.key === 'ALLOWLIST_ONLY');
       if (v) await env.variables(v.sid).update({ value });
       else await env.variables.create({ key: 'ALLOWLIST_ONLY', value });
+      resp.setBody({ ok: true });
+
+    } else if (event.action === 'update-ics-url') {
+      // ICS_URL is the iCalendar feed updateWorkers.private.js polls on each
+      // inbound call to learn who is on call. An empty value removes the var;
+      // worker sync then has no feed to fetch (the dashboard warns first).
+      const value = (event.icsUrl || '').toString().trim();
+      if (value !== '' && !/^https?:\/\//i.test(value)) {
+        resp.setStatusCode(400);
+        resp.setBody({ error: 'Calendar URL must be an http(s) URL' });
+        return callback(null, resp);
+      }
+      const v = vars.find(v => v.key === 'ICS_URL');
+      if (value === '') {
+        if (v) await env.variables(v.sid).remove();
+      } else if (v) {
+        await env.variables(v.sid).update({ value });
+      } else {
+        await env.variables.create({ key: 'ICS_URL', value });
+      }
       resp.setBody({ ok: true });
 
     } else if (event.action === 'dashboard') {

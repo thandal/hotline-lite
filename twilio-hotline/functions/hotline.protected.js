@@ -29,12 +29,17 @@ exports.handler = async function (context, event, callback) {
 
   // On the first inbound request (before any language digit), play the accept
   // sequence for a collect-call gateway: greet, wait for the system's prompt,
-  // then send the keys that connect the caller. A blank sequence means the
-  // number is only allow-listed (no gateway), so there is nothing to play.
-  if (!event.Digits && callerSequence && callerSequence.sequence) {
-    twiml.say('Hello.');
-    twiml.pause({ length: parseInt(callerSequence.pause, 10) || 0 });
-    twiml.play({ digits: callerSequence.sequence });
+  // then send the keys that connect the caller. Both halves are optional: an
+  // entry with no sequence is only allow-listed (no gateway), so there is
+  // nothing to play, and an entry with no pause needs no prompt to wait for.
+  if (!event.Digits && callerSequence) {
+    if (callerSequence.pause) {
+      twiml.say('Hello.');
+      twiml.pause({ length: parseInt(callerSequence.pause, 10) || 0 });
+    }
+    if (callerSequence.sequence) {
+      twiml.play({ digits: callerSequence.sequence });
+    }
   }
 
   if (!event.Digits && languages.length > 1) {

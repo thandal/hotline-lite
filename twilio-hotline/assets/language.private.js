@@ -1,49 +1,42 @@
-// lang2 -> [locale, display name].
-const langToLangLocale = {
-  en: ['en-US', 'English'],
-  es: ['es-MX', 'Spanish'],
-  fr: ['fr-FR', 'French'],
-  pt: ['pt-BR', 'Portuguese'],
-  ht: ['ht-HT', 'Haitian Creole'],
-  zh: ['zh-CN', 'Chinese'],
-  ar: ['ar-IQ', 'Arabic'],
-  ku: ['ku-IQ', 'Kurdish'],
-  ti: ['ti-ET', 'Tigrinya'],
-  sw: ['sw-KE', 'Swahili'],
-  uk: ['uk-UA', 'Ukrainian'],
-  rw: ['rw-RW', 'Kinyarwanda'],
-  ru: ['ru-RU', 'Russian'],
-  am: ['am-ET', 'Amharic'],
-  fa: ['fa-AF', 'Dari'],
-  vi: ['vi-VN', 'Vietnamese'],
-};
-
-// Default text-to-speech voice per language. Without an explicit voice, Twilio
-// uses the account-level default for the locale (configurable in the console at
+// lang2 -> {locale, display name, optional text-to-speech voice}.
+//
+// Without an explicit `voice`, Twilio uses the account-level default for the
+// locale (configurable in the console at
 // https://console.twilio.com/us1/develop/voice/settings/text-to-speech), which
 // for most languages is a low-quality, choppy "standard" voice. Setting a voice
 // here gives every deployment a good caller experience without per-account
 // setup. Languages omitted here fall back to that locale default.
 //
-// Values are Twilio voice identifiers (https://www.twilio.com/docs/voice/twiml/say/text-speech).
+// Voices are Twilio voice identifiers (https://www.twilio.com/docs/voice/twiml/say/text-speech).
 // These are Amazon Polly "Neural" voices — a good quality/cost balance; swap in
 // Polly "-Generative" or "Google.<locale>-Chirp3-HD-*" voices for the most
-// natural output. Languages with no high-quality Twilio voice (ht, ku, ti, sw,
-// uk, rw, ru, am, fa, vi) are left to the locale default for now.
-const langToVoice = {
-  en: 'Polly.Joanna-Neural',   // en-US
-  es: 'Polly.Mia-Neural',      // es-MX
-  fr: 'Polly.Lea-Neural',      // fr-FR
-  pt: 'Polly.Camila-Neural',   // pt-BR
-  zh: 'Polly.Zhiyu-Neural',    // cmn-CN (Mandarin)
-  ar: 'Polly.Hala-Neural',     // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
+// natural output. Languages with no voice in their own language (ht, ku, ti,
+// sw, uk, rw, ru, am, fa, vi) are left to the locale default rather than being
+// read aloud by a voice from an unrelated language.
+const langMap = {
+  en: { locale: 'en-US', name: 'English', voice: 'Polly.Joanna-Neural' },
+  es: { locale: 'es-MX', name: 'Spanish', voice: 'Polly.Mia-Neural' },
+  fr: { locale: 'fr-FR', name: 'French', voice: 'Polly.Lea-Neural' },
+  pt: { locale: 'pt-BR', name: 'Portuguese', voice: 'Polly.Camila-Neural' },
+  ht: { locale: 'ht-HT', name: 'Haitian Creole' },
+  zh: { locale: 'zh-CN', name: 'Chinese', voice: 'Polly.Zhiyu-Neural' },  // cmn-CN (Mandarin)
+  ar: { locale: 'ar-IQ', name: 'Arabic', voice: 'Polly.Hala-Neural' },    // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
+  ku: { locale: 'ku-IQ', name: 'Kurdish' },
+  ti: { locale: 'ti-ET', name: 'Tigrinya' },
+  sw: { locale: 'sw-KE', name: 'Swahili' },
+  uk: { locale: 'uk-UA', name: 'Ukrainian' },
+  rw: { locale: 'rw-RW', name: 'Kinyarwanda' },
+  ru: { locale: 'ru-RU', name: 'Russian' },
+  am: { locale: 'am-ET', name: 'Amharic' },
+  fa: { locale: 'fa-AF', name: 'Dari' },
+  vi: { locale: 'vi-VN', name: 'Vietnamese' },
 };
 
 // Build the attributes object for a TwiML <Say>: always sets the language
 // locale, and adds the configured voice when one exists for the language.
 const sayAttrs = function (lang2) {
-  const attrs = { language: langToLangLocale[lang2][0] };
-  if (langToVoice[lang2]) attrs.voice = langToVoice[lang2];
+  const attrs = { language: langMap[lang2].locale };
+  if (langMap[lang2].voice) attrs.voice = langMap[lang2].voice;
   return attrs;
 };
 
@@ -145,4 +138,4 @@ const messagesMap = {
 const ES_MESSAGES = messagesMap.es;
 const EN_MESSAGES = messagesMap.en;
 
-module.exports = { langToLangLocale, sayAttrs, sayLangMap, messagesMap, formatE164 };
+module.exports = { langMap, sayAttrs, sayLangMap, messagesMap, formatE164 };
