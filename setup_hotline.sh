@@ -9,9 +9,9 @@ WORKSPACE_FRIENDLY_NAME=twilio-workspace
 ENV_FILE="twilio-hotline/.env"
 
 # Idempotently set KEY="value" in the .env file, replacing any existing line for
-# KEY and leaving everything else in place (including the secrets that
-# setup_signal_presage.sh writes to the same file). Writes through the .env
-# symlink so the DEV/PROD profiles set up by switch_profile.sh stay intact.
+# KEY and leaving everything else in place (including any other secrets already
+# in the file). Writes through the .env symlink so the DEV/PROD profiles set up
+# by switch_profile.sh stay intact.
 set_env_var() {
     local key=$1 value=$2 body
     touch "$ENV_FILE"

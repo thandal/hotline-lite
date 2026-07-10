@@ -59,12 +59,7 @@ Operators can sign up to be a backup operator by putting the word "backup" or "s
 Operator shift registries are stored securely in Twilio Serverless environment variables.
 
 ## Worker Registry
-Manage your registry of workers/operators from the admin dashboard (the **Operators** panel). You can also manage worker registries from the command line using `./manage_worker_registry.sh`.
-  * Run `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY>` to view the current worker registries
-  * Add a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --add <attributes>`
-  * Update a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --update <ZVZZZ> <attributes>`
-  * Remove a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --remove <ZVZZZ or worker_friendly_name>`
-  * Process a batch action by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --remove --file <operators.jsonl>`
+Manage your registry of workers/operators from the admin dashboard (the **Operators** panel), where you can view, add, edit, and remove operators.
 
 ## Admin Interface
 The hotline includes a password-protected web admin interface for managing operators, blocklists, and supported languages. After deployment, access it at your Twilio Serverless URL's `/admin` endpoint.
@@ -80,11 +75,7 @@ From the admin dashboard you can:
 All data is stored securely in Twilio Serverless environment variables.
 
 ## Blocklist
-You can also manually set a blocklist, or the operators can choose to add a number to the blocklist at the end of the call
-You can manage the blocklist by
-  * running `./manage_blocklist.sh` to view the current state of the blocklist
-  * creating a text file with a single line list of numbers, formated as +18882225555,+16663339999
-  * uploading this list by running `./manage_blocklist.sh --update myfile.txt`
+Manage the blocklist from the admin dashboard (the **Blocklist** panel). Operators can also add a caller's number to the blocklist at the end of a call.
 
 ## Cost
 
