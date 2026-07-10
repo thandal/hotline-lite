@@ -37,6 +37,9 @@ const USAGE_CATEGORIES = [
   { category: 'recordings', label: 'Recordings' },
 ];
 
+// How many inbound messages the Recent SMS panel shows.
+const SMS_LIMIT = 20;
+
 exports.handler = async function (context, event, callback) {
   const resp = new Twilio.Response();
   resp.appendHeader('Content-Type', 'application/json');
@@ -120,6 +123,33 @@ exports.handler = async function (context, event, callback) {
       }
 
       resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
+
+    } else if (event.action === 'list-sms') {
+      // Twilio records inbound messages in the Messages log whether or not the
+      // number has a messaging webhook (the Signal registration flow in
+      // signalOps.js leans on the same thing), so read the log rather than
+      // standing up a receive handler. Scoping by `to` narrows the query to the
+      // hotline number; without one we can't filter server-side, so pull a
+      // deeper page and trim after dropping outbound rows.
+      const to = (context.HOTLINE_PHONE_NUMBER || '').trim();
+      const messages = await client.messages.list(
+        to ? { to, limit: SMS_LIMIT } : { limit: SMS_LIMIT * 5 }
+      );
+      const sms = messages
+        .filter(m => m.direction === 'inbound')
+        .map(m => {
+          const at = m.dateSent || m.dateCreated;
+          return {
+            sid: m.sid,
+            from: m.from,
+            body: m.body || '',
+            numMedia: Number(m.numMedia) || 0,
+            sentAt: at ? new Date(at).toISOString() : null,
+          };
+        })
+        .sort((a, b) => (b.sentAt || '').localeCompare(a.sentAt || ''))
+        .slice(0, SMS_LIMIT);
+      resp.setBody({ sms });
 
     } else if (event.action === 'add-operator') {
       const key = 'worker' + event.phone.slice(-4);

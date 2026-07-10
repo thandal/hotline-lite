@@ -6,6 +6,18 @@
 
 SERVICE_FRIENDLY_NAME=twilio-hotline
 WORKSPACE_FRIENDLY_NAME=twilio-workspace
+ENV_FILE="twilio-hotline/.env"
+
+# Idempotently set KEY="value" in the .env file, replacing any existing line for
+# KEY and leaving everything else in place (including the secrets that
+# setup_signal_presage.sh writes to the same file). Writes through the .env
+# symlink so the DEV/PROD profiles set up by switch_profile.sh stay intact.
+set_env_var() {
+    local key=$1 value=$2 body
+    touch "$ENV_FILE"
+    body=$(grep -v "^${key}=" "$ENV_FILE")
+    { [[ -n "$body" ]] && printf '%s\n' "$body"; printf '%s="%s"\n' "$key" "$value"; } > "$ENV_FILE"
+}
 
 if [[ `twilio plugins | grep "plugin-serverless"` == "" ]]
 then
@@ -70,7 +82,7 @@ then
     fi
 fi
 
-echo "HOTLINE_PHONE_NUMBER=\"$PHONE_NUMBER\"" > twilio-hotline/.env
+set_env_var "HOTLINE_PHONE_NUMBER" "$PHONE_NUMBER"
 echo "Using $PHONE_NUMBER"
 
 echo Initially deploying service...
@@ -96,28 +108,10 @@ then
 fi
 #echo Environment SID: $ENVIRONMENT_SID
 
-# Find the languages used on the hotline
-LANGUAGES_SID=`twilio api:serverless:v1:services:environments:variables:list \
-    --service-sid $SERVICE_SID \
-    --environment-sid $ENVIRONMENT_SID \
-    | grep "LANGUAGES" | awk '{ print $1 }'`
-if [ ${#LANGUAGES_SID} == 34 ]
-then
-    DEFAULT_LANGUAGES=`twilio api:serverless:v1:services:environments:variables:fetch \
-        --service-sid $SERVICE_SID \
-        --environment-sid $ENVIRONMENT_SID \
-        --sid $LANGUAGES_SID \
-        --properties value \
-        | tail -n 1`
-fi
-if [ -z "$DEFAULT_LANGUAGES" ]
-then
-    DEFAULT_LANGUAGES="es,en"
-fi
-read -p "What languages does your hotline provide? List them in order of priority. (Press enter to use: $DEFAULT_LANGUAGES): " LANGUAGES
-LANGUAGES=${LANGUAGES:-$DEFAULT_LANGUAGES}
-echo "LANGUAGES=\"$LANGUAGES\"" >> twilio-hotline/.env
-#echo Languages: $LANGUAGES
+# Languages, operators, the shift calendar, the blocklist, and special call
+# handling are all configured from the admin dashboard (/admin) after deploy,
+# so setup no longer prompts for them. hotline.protected.js falls back to a
+# default language list until an admin sets one.
 
 # Find the service domain base for callback functions
 SERVICE_DOMAIN_BASE=`twilio api:serverless:v1:services:list \
@@ -146,34 +140,19 @@ then
     echo "Workspace SID not found"
     exit
 fi
-echo "WORKSPACE_SID=\"$WORKSPACE_SID\"" >> twilio-hotline/.env
+set_env_var "WORKSPACE_SID" "$WORKSPACE_SID"
 #echo Workspace SID: $WORKSPACE_SID
 
 WORKFLOW_SID=`twilio api:taskrouter:v1:workspaces:workflows:list \
     --workspace-sid $WORKSPACE_SID \
     | tail -n 1 | awk '{ print $1 }'`
-echo "WORKFLOW_SID=\"$WORKFLOW_SID\"" >> twilio-hotline/.env
+set_env_var "WORKFLOW_SID" "$WORKFLOW_SID"
 #echo Workflow SID: $WORKFLOW_SID
 
 QUEUE_SID=`twilio api:taskrouter:v1:workspaces:task-queues:list \
     --workspace-sid $WORKSPACE_SID \
     | tail -n 1 | awk '{ print $1 }'`
 #echo Queue SID: $QUEUE_SID
-
-# Check for an existing environment
-ENVIRONMENT_SID=`twilio api:serverless:v1:services:environments:list \
-    --service-sid $SERVICE_SID \
-    --properties sid,uniqueName \
-    | grep "dev-environment" | awk '{ print $1 }'`
-if [ ${#ENVIRONMENT_SID} != 34 ]
-then
-    ENVIRONMENT_SID=`twilio api:serverless:v1:services:environments:create \
-        --service-sid $SERVICE_SID \
-        --unique-name "dev-environment" \
-        --domain-suffix "dev" \
-        | tail -n 1 | awk '{ print $1 }'`
-fi
-#echo Environment SID: $ENVIRONMENT_SID
 
 # Configure the workspace workflow (assignment-callback-url is a little brittle!)
 # Most phones go to voicemail after 20 seconds, so we set the task reservation timeout to avoid that.
@@ -193,95 +172,6 @@ twilio api:taskrouter:v1:workspaces:task-queues:update \
     --workspace-sid $WORKSPACE_SID \
     --sid $QUEUE_SID \
     --max-reserved-workers=50
-
-# Check for an existing list of operators
-echo  # (optional) move to a new line
-echo "Configuring the operator list..."
-read -p "Enter the path to a JSONL file containing an updated operator list or press enter to keep the current list: " ROSTER_FILE
-echo    # (optional) move to a new line
-if [[ -n "$ROSTER_FILE" ]]
-then
-    echo Updating operator list with $ROSTER_FILE...
-    REGISTERED_WORKERS=`twilio api:serverless:v1:services:environments:variables:list \
-        --service-sid $SERVICE_SID \
-        --environment-sid $ENVIRONMENT_SID \
-        | grep -i "WORKER" | awk '{ print $2,$1 }'`
-
-    while read -r line; do
-        WORKER_NAME=worker`echo $line | sed -nr "s/^.*\+1[0-9]{6}([0-9]{4}).*$/\1/p"`
-        WORKER_NAMES+=($WORKER_NAME)
-        WORKER_ATTRIBUTES=$line
-        # echo "$WORKER_NAME=\"$WORKER_ATTRIBUTES\"" >> twilio-hotline/.env
-        if [[ "$REGISTERED_WORKERS" == *"$WORKER_NAME"* ]]
-        then
-            echo "Worker $WORKER_NAME already registered, attempting to update attributes..."
-            WORKER_SID=`echo "$REGISTERED_WORKERS" | grep -i "$WORKER_NAME" | awk '{ print $2 }'`
-            twilio api:serverless:v1:services:environments:variables:update \
-                --service-sid $SERVICE_SID \
-                --environment-sid $ENVIRONMENT_SID \
-                --sid $WORKER_SID \
-                --key $WORKER_NAME \
-                --value "$WORKER_ATTRIBUTES"
-        else
-            echo "Adding new worker: $WORKER_NAME"
-            twilio api:serverless:v1:services:environments:variables:create \
-                --service-sid $SERVICE_SID \
-                --environment-sid $ENVIRONMENT_SID \
-                --key $WORKER_NAME \
-                --value "$WORKER_ATTRIBUTES"
-        fi
-    done < $ROSTER_FILE
-
-    # Check the current workers, deleting any that are not in the "new" list.
-    echo "$REGISTERED_WORKERS" | while read -r line; do
-        if ! echo ${WORKER_NAMES[@]} | grep -qw "$(echo $line | awk '{ print $1 }')"
-        then
-            WORKER_SID=$(echo $line | awk '{ print $2 }')
-            twilio api:serverless:v1:services:environments:variables:remove \
-                --service-sid $SERVICE_SID \
-                --environment-sid $ENVIRONMENT_SID \
-                --sid $WORKER_SID
-            echo "Removed worker $(echo $line | awk '{ print $1 }')"
-        fi
-    done
-fi
-
-# Check for an existing shift calendar
-echo  # (optional) move to a new line
-echo "Configuring the operator shift calendar..."
-ICS_URL_SID=`twilio api:serverless:v1:services:environments:variables:list \
-    --service-sid $SERVICE_SID \
-    --environment-sid $ENVIRONMENT_SID \
-    | grep "ICS_URL" | awk '{ print $1 }'`
-if [ ${#ICS_URL_SID} == 34 ]
-then
-    ICS_URL=`twilio api:serverless:v1:services:environments:variables:fetch \
-            --service-sid $SERVICE_SID \
-            --environment-sid $ENVIRONMENT_SID \
-            --sid $ICS_URL_SID \
-            --properties value \
-            | tail -n 1`
-    echo "Current ICS calendar URL: $ICS_URL"
-    read -p "Enter the ICS calendar URL for operator shifts (or press enter to use the URL listed above): " NEW_ICS_URL
-    echo    # (optional) move to a new line
-    echo    # (optional) move to a new line
-fi
-if [[ ${#ICS_URL_SID} != 34 || $NEW_ICS_URL != "" ]]
-then
-    if [[ $ICS_URL == "" ]]
-    then
-        read -p "Enter the ICS calendar URL for operator shifts: " NEW_ICS_URL
-    fi
-    ICS_URL=${NEW_ICS_URL:-$ICS_URL}
-    ICS_URL_SID=`twilio api:serverless:v1:services:environments:variables:create \
-        --service-sid $SERVICE_SID \
-        --environment-sid $ENVIRONMENT_SID \
-        --key "ICS_URL" \
-        --value "$ICS_URL" \
-        | tail -n 1 | awk '{ print $1 }'`
-fi
-# echo ICS URL SID: $ICS_URL_SID
-echo "ICS_URL=\"$ICS_URL\"" >> twilio-hotline/.env
 
 # Set the admin panel password (used by functions/admin.js for /admin login)
 echo  # (optional) move to a new line
@@ -343,3 +233,7 @@ twilio api:core:incoming-phone-numbers:update \
 
 echo  # (optional) move to a new line
 echo "Done!"
+echo
+echo "Manage operators, languages, the blocklist, the shift calendar, and special"
+echo "call handling from the admin dashboard:"
+echo "  https://$SERVICE_DOMAIN_BASE-dev.twil.io/admin"

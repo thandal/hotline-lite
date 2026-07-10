@@ -22,6 +22,11 @@ A simple, privacy-first Twilio-based hotline. Key features
 2. Clone this repo: `gh repo clone thandal/hotline-lite`
 3. Run the setup script: `./setup_hotline.sh`
 
+The setup script provisions the phone number, TaskRouter workspace/workflow, and
+admin password, then deploys the service. Everything else -- operators, languages,
+the blocklist, the shift calendar, and special call handling -- is configured from
+the admin dashboard (`/admin`) after deployment.
+
 # Operation
 
 ## Caller Experience
@@ -54,7 +59,7 @@ Operators can sign up to be a backup operator by putting the word "backup" or "s
 Operator shift registries are stored securely in Twilio Serverless environment variables.
 
 ## Worker Registry
-The setup script will help you create and update your registry of workers/operators. You can also manually manage worker registries using `./manage_worker_registry.sh`.
+Manage your registry of workers/operators from the admin dashboard (the **Operators** panel). You can also manage worker registries from the command line using `./manage_worker_registry.sh`.
   * Run `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY>` to view the current worker registries
   * Add a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --add <attributes>`
   * Update a worker registry by running `./manage_worker_registry.sh --service_sid <ZSXXX> --environment_sid <ZEYYY> --update <ZVZZZ> <attributes>`

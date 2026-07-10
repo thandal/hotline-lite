@@ -290,6 +290,23 @@
 </div>
 
 <div class="card">
+  <h2>Recent SMS</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    The most recent text messages received by the hotline number. Refreshes on its own as new messages arrive.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Received</th>
+        <th>From</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody id="smsBody"></tbody>
+  </table>
+</div>
+
+<div class="card">
   <h2>Usage</h2>
   <table>
     <thead>
@@ -454,6 +471,77 @@
     $('uBody').innerHTML = html;
   }
 
+  // --- Recent SMS --------------------------------------------------------
+  // Inbound messages land in Twilio's message log on their own, so the panel
+  // just re-reads it on a timer. `list-sms` is a separate action from `status`
+  // because `status` also hits the usage API, which is far too heavy to poll.
+  var SMS_POLL_MS = 10000;
+  var SMS = [];
+
+  function fmtAge(iso) {
+    if (!iso) return '';
+    var secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (secs < 60) return Math.max(secs, 0) + 's ago';
+    if (secs < 3600) return Math.floor(secs / 60) + 'm ago';
+    if (secs < 86400) return Math.floor(secs / 3600) + 'h ago';
+    return Math.floor(secs / 86400) + 'd ago';
+  }
+
+  function renderSms() {
+    // A poll can still be in flight when logout tears the dashboard out of the
+    // DOM; landing here with no table to draw into is expected, not an error.
+    var tbody = $('smsBody');
+    if (!tbody) return;
+    if (!SMS.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="color:#999">None</td></tr>';
+      return;
+    }
+    tbody.innerHTML = SMS.map(function (m) {
+      var exact = m.sentAt ? new Date(m.sentAt).toLocaleString() : '';
+      var media = m.numMedia ? ' <span class="tag">' + m.numMedia + ' media</span>' : '';
+      var body = m.body ? escapeHtml(m.body) : '<span style="color:#999">(no text)</span>';
+      return '<tr>' +
+        '<td style="white-space:nowrap" title="' + escapeHtml(exact) + '">' + fmtAge(m.sentAt) + '</td>' +
+        '<td style="white-space:nowrap">' + escapeHtml(m.from) + '</td>' +
+        '<td style="white-space:pre-wrap;overflow-wrap:anywhere">' + body + media + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // `quiet` suppresses the toast for background polls: a transient blip
+  // shouldn't paste a sticky error over the page every ten seconds.
+  function refreshSms(quiet) {
+    return api({ action: 'list-sms' })
+      .then(function (d) { SMS = d.sms || []; renderSms(); })
+      .catch(function (e) {
+        if (quiet) console.error('Recent SMS refresh failed', e.body || e);
+        else reportError('Recent SMS', e);
+      });
+  }
+
+  function pollSms() {
+    // Logging out tears the dashboard out of the DOM; that is the stop signal.
+    // Without this the timer would keep firing with a cleared token, and each
+    // 401 would re-trigger logout.
+    if (!$('smsBody')) { clearInterval(window.smsTimer); window.smsTimer = null; return; }
+    if (document.hidden) return;
+    refreshSms(true);
+  }
+
+  // The timer handle lives on `window` because admin.html re-executes this
+  // whole script on every login — a `var` would be reset, orphaning the old
+  // interval and leaving two pollers running after a re-login.
+  function startSmsPoll() {
+    if (window.smsTimer) clearInterval(window.smsTimer);
+    window.smsTimer = setInterval(pollSms, SMS_POLL_MS);
+    if (!window.smsVisBound) {
+      window.smsVisBound = true;
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && $('smsBody')) refreshSms(true);
+      });
+    }
+  }
+
   function toggleAdd() { $('addForm').classList.toggle('hide'); }
 
   function editOp(key, names, phone, langs) {
@@ -471,6 +559,8 @@
     window.api = apiFunc;
     api({ action: 'status' }).then(function (d) { DATA = d; render(); }).catch(catcher('Status'));
     refreshSignalStatus();
+    refreshSms();
+    startSmsPoll();
   };
 
   function reloadStatus() { return api({ action: 'status' }).then(function (d) { DATA = d; render(); }); }

@@ -2,7 +2,10 @@
 exports.handler = async function (context, event, callback) {
   const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
   const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
-  const languages = context.LANGUAGES.split(',');
+  // LANGUAGES is dashboard-managed and may be unset on a fresh install (before an
+  // admin configures one) or cleared to empty; fall back to a default so the
+  // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
+  const languages = (context.LANGUAGES || 'es,en').split(',');
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
   const twiml = new Twilio.twiml.VoiceResponse();
 
