@@ -25,7 +25,7 @@ then
     twilio plugins:install @twilio-labs/plugin-serverless
 fi
 
-if [[ `twilio profiles:list | grep "AC*"` == "" ]]
+if [[ `twilio profiles:list | grep "^AC"` == "" ]]
 then
     twilio login
 else
@@ -158,7 +158,7 @@ QUEUE_SID=`twilio api:taskrouter:v1:workspaces:task-queues:list \
 # Most phones go to voicemail after 20 seconds, so we set the task reservation timeout to avoid that.
 echo  # (optional) move to a new line
 echo "Configuring the workflow..."
-WORKFLOW_CONFIGURATION=`cat workflow.json | jq -rca . | jq -R | sed s/QUEUE_SID/$QUEUE_SID/g`
+WORKFLOW_CONFIGURATION=`cat workflow.json | jq -rca . | sed s/QUEUE_SID/$QUEUE_SID/g`
 twilio api:taskrouter:v1:workspaces:workflows:update \
     --workspace-sid $WORKSPACE_SID \
     --sid $WORKFLOW_SID \
