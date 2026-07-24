@@ -1,40 +1,18 @@
 exports.handler = async function (context, event, callback) {
   // Has the Signal integration been configured? If not, we stop right here.
   // The presence of a group key is a proxy for a functional Signal dropbox.
-  if (!!context.GROUP_KEY) return callback(null, '');
-
-  // Validate the incoming request using Twilio's request validation method.
-  // We don't want to process requests that aren't actually from Twilio.
-  /*
-  let twilioSignature;
-  try { twilioSignature = event.headers['X-Twilio-Signature'] || event.headers['x-twilio-signature']; }
-  catch (e) { 
-    console.warn('Failed to extract Twilio signature', event.headers); 
-    return callback(null, ''); 
-  }
-  const client = context.getTwilioClient();
-  const url = context.DOMAIN_NAME + '/inboundSmsMessage';
-  const params = event.body || {};
-  const isValidRequest = client.validateRequest(
-    context.AUTH_TOKEN,
-    twilioSignature,
-    url,
-    params
-  );
-  if (!isValidRequest) {
-    console.error('Invalid request signature', event.headers, event.body);
-    return callback(null, '');
-  }
-  */
+  const signalConfigured = !!context.GROUP_KEY;
+  if (!signalConfigured) return callback(null, '');
 
   // We want to ignore messages from numbers that are on our blocklist,
   // or if the system is in allowlist-only mode and the number isn't on the allowlist.
+  const sender = event.From.replace('whatsapp:', '');
   let connectionSequences = [];
   try { connectionSequences = JSON.parse(context.CONNECTION_SEQUENCES || '[]'); }
   catch (e) { connectionSequences = []; }
   if (!Array.isArray(connectionSequences)) connectionSequences = [];
   const allowlistOnly = context.ALLOWLIST_ONLY === 'true';
-  const callerSequence = connectionSequences.find(s => s && s.number === event.From);
+  const callerSequence = connectionSequences.find(s => s && s.number === sender);
 
   // BLOCKLIST may be unset (it isn't pre-provisioned), empty, or the 'null'
   // sentinel admin writes for an empty list — guard the split so a missing var
@@ -42,7 +20,8 @@ exports.handler = async function (context, event, callback) {
   const blocklist = (!context.BLOCKLIST || context.BLOCKLIST === 'null')
     ? [] : context.BLOCKLIST.split(',').filter(Boolean);
 
-  if (blocklist.includes(event.From) || (allowlistOnly && !callerSequence)) {
+  if (blocklist.includes(sender) || (allowlistOnly && !callerSequence)) {
+    console.log('Ignoring message from blocked or unallowed number', sender);
     return callback(null, '');
   }
 
@@ -50,6 +29,7 @@ exports.handler = async function (context, event, callback) {
   // Instead, we just log it and return a success response.
   const pattern = /code[^0-9]{0,40}(\d{3})[-\s]?(\d{3})/i;
   if (pattern.test(event.Body)) {
+    console.log('Ignoring confirmation code message', event.From);
     return callback(null, '');
   }
 
@@ -71,7 +51,7 @@ exports.handler = async function (context, event, callback) {
   const messageType = event.To.includes('whatsapp') ? 'WhatsApp' : 'SMS';
   const attachmentText = mediaUrls.length > 0 ? ` with ${mediaUrls.length} attachment(s)` : '';
   let attachment_path = mediaUrls.length > 0 ? await prepareAttachment(context, mediaUrls[0].url, mediaUrls[0].filename) : null;
-  let messageBody = event.Body + "\n\n---\n" + messageType + " from " + formatE164(event.From) + attachmentText;
+  let messageBody = event.Body + "\n\n---\n" + messageType + " from " + formatE164(sender) + attachmentText;
   await notify(context, messageBody, attachment_path);
 
   if (mediaUrls.length > 1) {
