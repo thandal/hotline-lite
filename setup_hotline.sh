@@ -229,7 +229,8 @@ echo "Configuring the phone number callbacks..."
 twilio api:core:incoming-phone-numbers:update \
     --sid $PHONE_NUMBER_SID \
     --voice-url="https://$SERVICE_DOMAIN_BASE-dev.twil.io/hotline" \
-    --status-callback="https://$SERVICE_DOMAIN_BASE-dev.twil.io/clearCalls"
+    --sms-url="https://$SERVICE_DOMAIN_BASE-dev.twil.io/inboundSmsMessage" \
+    --status-callback="https://$SERVICE_DOMAIN_BASE-dev.twil.io/clearLogs"
 
 echo  # (optional) move to a new line
 echo "Done!"
