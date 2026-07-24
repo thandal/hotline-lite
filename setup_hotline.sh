@@ -25,7 +25,7 @@ then
     twilio plugins:install @twilio-labs/plugin-serverless
 fi
 
-if [[ `twilio profiles:list | grep "^AC"` == "" ]]
+if [[ `twilio profiles:list | grep "AC[0-9a-fA-F]\{32\}"` == "" ]]
 then
     twilio login
 else
@@ -109,7 +109,7 @@ fi
 #echo Environment SID: $ENVIRONMENT_SID
 
 # Languages, operators, the shift calendar, the blocklist, and special call
-# handling are all configured from the admin dashboard (/admin) after deploy,
+# handling are all configured from the admin dashboard (/admin.html) after deploy,
 # so setup no longer prompts for them. hotline.protected.js falls back to a
 # default language list until an admin sets one.
 
@@ -173,7 +173,7 @@ twilio api:taskrouter:v1:workspaces:task-queues:update \
     --sid $QUEUE_SID \
     --max-reserved-workers=50
 
-# Set the admin panel password (used by functions/admin.js for /admin login)
+# Set the admin panel password (used by functions/admin.js for /admin.html login)
 echo  # (optional) move to a new line
 echo "Configuring the admin panel password..."
 ADMIN_PASSWORD_SID=`twilio api:serverless:v1:services:environments:variables:list \
@@ -236,4 +236,4 @@ echo "Done!"
 echo
 echo "Manage operators, languages, the blocklist, the shift calendar, and special"
 echo "call handling from the admin dashboard:"
-echo "  https://$SERVICE_DOMAIN_BASE-dev.twil.io/admin"
+echo "  https://$SERVICE_DOMAIN_BASE-dev.twil.io/admin.html"

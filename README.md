@@ -25,7 +25,7 @@ A simple, privacy-first Twilio-based hotline. Key features
 The setup script provisions the phone number, TaskRouter workspace/workflow, and
 admin password, then deploys the service. Everything else -- operators, languages,
 the blocklist, the shift calendar, and special call handling -- is configured from
-the admin dashboard (`/admin`) after deployment.
+the admin dashboard (`/admin.html`) after deployment.
 
 # Operation
 
@@ -62,7 +62,7 @@ Operator shift registries are stored securely in Twilio Serverless environment v
 Manage your registry of workers/operators from the admin dashboard (the **Operators** panel), where you can view, add, edit, and remove operators.
 
 ## Admin Interface
-The hotline includes a password-protected web admin interface for managing operators, blocklists, and supported languages. After deployment, access it at your Twilio Serverless URL's `/admin` endpoint.
+The hotline includes a password-protected web admin interface for managing operators, blocklists, and supported languages. After deployment, access it at your Twilio Serverless URL's `/admin.html` endpoint.
 
 The admin password is set during initial setup (via `ADMIN_PASSWORD` in the environment variables). Authentication uses HMAC-SHA1 tokens stored in the browser's session storage.
 
