@@ -1,4 +1,8 @@
 exports.handler = async function (context, event, callback) {
+  // Has the Signal integration been configured? If not, we stop right here.
+  // The presence of a group key is a proxy for a functional Signal dropbox.
+  if (!!context.GROUP_KEY) return callback(null, '');
+
   // Validate the incoming request using Twilio's request validation method.
   // We don't want to process requests that aren't actually from Twilio.
   /*
