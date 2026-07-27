@@ -49,9 +49,11 @@ exports.handler = async function (context, event, callback) {
   const { notify, prepareAttachment } = require(Runtime.getAssets()['/notify.js'].path);
   const { formatE164 } = require(Runtime.getAssets()['/language.js'].path);
   const messageType = event.To.includes('whatsapp') ? 'WhatsApp' : 'SMS';
+  let senderText = formatE164(sender);
+  senderText += event.From.includes('whatsapp') && event.ProfileName ? ' (~' + event.ProfileName + ')' : '';
   const attachmentText = mediaUrls.length > 0 ? ` with ${mediaUrls.length} attachment(s)` : '';
   let attachment_path = mediaUrls.length > 0 ? await prepareAttachment(context, mediaUrls[0].url, mediaUrls[0].filename) : null;
-  let messageBody = event.Body + "\n\n---\n" + messageType + " from " + formatE164(sender) + attachmentText;
+  let messageBody = event.Body + "\n\n---\n" + messageType + " from " + senderText + attachmentText;
   await notify(context, messageBody, attachment_path);
 
   if (mediaUrls.length > 1) {
