@@ -18,6 +18,7 @@ exports.handler = async function (context, event, callback) {
   if (!Array.isArray(connectionSequences)) connectionSequences = [];
   const allowlistOnly = context.ALLOWLIST_ONLY === 'true';
   const callerSequence = connectionSequences.find(s => s && s.number === event.From);
+  const skipMenu = callerSequence && !!callerSequence.skipmenu;
 
   // BLOCKLIST may be unset (it isn't pre-provisioned), empty, or the 'null'
   // sentinel admin writes for an empty list — guard the split so a missing var
@@ -45,7 +46,7 @@ exports.handler = async function (context, event, callback) {
     }
   }
 
-  if (!event.Digits && languages.length > 1) {
+  if (!event.Digits || skipMenu) {
     // Update the workers first. Worker sync is a best-effort refresh, never a
     // gate on the call: if it throws, TaskRouter still holds the roster from the
     // last successful sync, so answer the caller and let the error surface in the
@@ -55,6 +56,9 @@ exports.handler = async function (context, event, callback) {
     } catch (e) {
       console.error('update_workers_failed ' + (e.message || e));
     }
+  }
+
+  if (!event.Digits && languages.length > 1 && !skipMenu) {
     const gather = twiml.gather({ numDigits: 1 });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
@@ -73,12 +77,12 @@ exports.handler = async function (context, event, callback) {
     // If no response happens within the gather timeout, say goodbye in the default language and hang up:
     twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
-  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1) {
+  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1 || skipMenu) {
     var key = languages[0];
     if (languages.length == 1) {
       // No language selection needed if there is just one language!
       twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
-    } else {
+    } else if (event.Digits) {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed
       console.log("Caller selected language:", key);
