@@ -11,8 +11,8 @@ exports.handler = async function (context, event, callback) {
           .reservations(event.reservationSid)
           .fetch();
       console.log("postCall reservationStatus " + reservation.reservationStatus);
-      if (reservation.reservationStatus != 'completed') {
-        twiml.say(sayAttrs(event.language), "Call reservation failed with status " + reservation.reservationStatus);
+      if (reservation.reservationStatus != 'completed' && reservation.reservationStatus != 'accepted') {
+        twiml.say(sayAttrs(event.language), "Call reservation ended with status " + reservation.reservationStatus);
       }
     } catch (err) {
       console.log("postCall reservation fetch failed: " + err.message);

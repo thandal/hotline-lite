@@ -72,7 +72,7 @@ then
         read -p "Enter the phone number you want in E.164 format (e.g. +15405340500): " PHONE_NUMBER
         PHONE_NUMBER_SID=`twilio api:core:incoming-phone-numbers:create \
             --phone-number $PHONE_NUMBER \
-            --property sid \
+            --properties sid \
             | tail -n 1 | awk '{ print $1 }'`
         if [ -z "$PHONE_NUMBER_SID" ]
         then
