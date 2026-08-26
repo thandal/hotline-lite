@@ -36,11 +36,17 @@ exports.handler = async function (context, event, callback) {
   // Check for media attachments. If there are any, we want to send them to the group chat as well.
   let mediaUrls = [];
   if (event.NumMedia && parseInt(event.NumMedia) > 0) {
+    const crypto = require('crypto');
     const extName = require('ext-name');
     for (let i = 0; i < parseInt(event.NumMedia); i++) {
       let contentType = event[`MediaContentType${i}`];
-      let extension = extName.mime(contentType)[0].ext;
-      let filename = `attachment_${i + 1}.${extension}`;
+      // ext-name returns nothing for a type it doesn't know, and it won't match
+      // a type that carries parameters (`audio/ogg; codecs=opus`, which is what
+      // some WhatsApp voice notes arrive as). Strip the parameters and fall back,
+      // so one unusual attachment can't take down the whole message.
+      let match = extName.mime(contentType.split(';')[0].trim())[0];
+      let extension = match ? match.ext : 'bin';
+      let filename = `${crypto.randomUUID()}_attachment_${i + 1}.${extension}`;
       mediaUrls.push({ url: event[`MediaUrl${i}`], contentType: contentType, filename: filename });
     }
 
@@ -57,7 +63,7 @@ exports.handler = async function (context, event, callback) {
   await notify(context, messageBody, attachment_path);
 
   if (mediaUrls.length > 1) {
-    for (let media of mediaUrls) {
+    for (let media of mediaUrls.slice(1)) {
       attachment_path = await prepareAttachment(context, media.url, media.filename);
       await notify(context, "", attachment_path);
     }

@@ -9,8 +9,14 @@ exports.handler = async function (context, event, callback) {
       console.log("Clearing Recordings Promise Rejected");
     });
   };
-  const calls = await twilioClient.calls.list({ limit: 20 });
-  await Promise.all(calls.map((c) => removeRecordings(c) && twilioClient.calls(c.sid).remove())).catch(function () {
+  // Only clear calls that ended a while ago. recordingStatusCallback fires at
+  // the same moment as this one, and it needs the recording to still be there
+  // while it downloads the voice memo and hands it to Signal.
+  const calls = await twilioClient.calls.list({ limit: 20, endTimeBefore: new Date( Date.now() - 60 * 60 * 1000 ) }); // Select calls that ended more than an hour ago
+  await Promise.all(calls.map(async (c) => {
+    await removeRecordings(c);
+    await twilioClient.calls(c.sid).remove();
+  })).catch(function () {
     console.log("Clearing Call Log Promise Rejected");
   });
 
@@ -22,7 +28,10 @@ exports.handler = async function (context, event, callback) {
     });
   };
   const messages = await twilioClient.messages.list({ limit: 20, dateSentBefore: new Date( Date.now() - 7 * 24 * 60 * 60 * 1000 ) }); // Select messages more than 7 days old
-  await Promise.all(messages.map((m) => removeMedia(m) && twilioClient.messages(m.sid).remove())).catch(function () {
+  await Promise.all(messages.map(async (m) => {
+    await removeMedia(m);
+    await twilioClient.messages(m.sid).remove();
+  })).catch(function () {
     console.log("Clearing Message Log Promise Rejected");
   });
 
