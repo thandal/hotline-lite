@@ -13,7 +13,8 @@
     "twilio": "5.10.7",
     "axios": "^1.13.2",
     "https": "^1.0.0",
-    "node-ical": "^0.22.1"
+    "node-ical": "^0.22.1",
+    "ext-name": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

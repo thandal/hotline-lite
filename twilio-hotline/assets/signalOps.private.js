@@ -37,9 +37,9 @@ function runner(_context, dbPath) {
       // tracing output is the only window into what happened during sync (decrypt
       // failures, DEM sends, etc).
       if (res.stderr) {
-        for (const line of res.stderr.split('\n').filter(Boolean)) {
-          console.log(`[presage-cli ${subArgs[0]}] ${line}`);
-        }
+        // for (const line of res.stderr.split('\n').filter(Boolean)) {
+        //  console.log(`[presage-cli ${subArgs[0]}] ${line}`);
+        //}
       }
       if (res.status !== 0) {
         const err = new Error(`presage-cli ${subArgs.join(' ')} exited ${res.status}`);
