@@ -27,7 +27,7 @@ exports.handler = async function (context, event, callback) {
 
   // If the message is a 2FA code, we don't want to forward it to the group chat. 
   // Instead, we just log it and return a success response.
-  const pattern = /code[^0-9]{0,40}(\d{3})[-\s]?(\d{3})/i;
+  const pattern = /code[^0-9]{0,40}((\d{3})[-\s]?(\d{3})|(\d{4}))/i;
   if (pattern.test(event.Body)) {
     console.log('Ignoring confirmation code message', event.From);
     return callback(null, '');
