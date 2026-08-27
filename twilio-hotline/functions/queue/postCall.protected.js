@@ -11,12 +11,12 @@ exports.handler = async function (context, event, callback) {
           .reservations(event.reservationSid)
           .fetch();
       console.log("postCall reservationStatus " + reservation.reservationStatus);
-      if (reservation.reservationStatus != 'completed') {
-        twiml.say(sayAttrs(event.language), "Call reservation failed with status " + reservation.reservationStatus);
+      if (reservation.reservationStatus != 'completed' && reservation.reservationStatus != 'accepted') {
+        twiml.say(sayAttrs("en"), "Call reservation ended with status " + reservation.reservationStatus);
       }
     } catch (err) {
       console.log("postCall reservation fetch failed: " + err.message);
-      twiml.say(sayAttrs(event.language), "Call reservation status is unavailable.");
+      twiml.say(sayAttrs("en"), "Call reservation status is unavailable.");
     }
     const gather = twiml.gather({ numDigits: 1 });
     sayLangMap(

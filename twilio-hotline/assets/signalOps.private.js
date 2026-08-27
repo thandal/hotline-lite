@@ -20,7 +20,7 @@ function tmpDbPath() {
 }
 
 // SQLite in WAL mode may leave `<path>-wal` and `<path>-shm` alongside the main
-// file. prune-cache truncates them but register/other ops may not run prune.
+// file. withDb always runs prune-cache, which truncates them, but register does not.
 function cleanupTmpDb(dbPath) {
   for (const p of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`, `${dbPath}-journal`]) {
     try { fs.unlinkSync(p); } catch { /* best effort */ }
@@ -37,9 +37,9 @@ function runner(_context, dbPath) {
       // tracing output is the only window into what happened during sync (decrypt
       // failures, DEM sends, etc).
       if (res.stderr) {
-        for (const line of res.stderr.split('\n').filter(Boolean)) {
-          console.log(`[presage-cli ${subArgs[0]}] ${line}`);
-        }
+        // for (const line of res.stderr.split('\n').filter(Boolean)) {
+        //  console.log(`[presage-cli ${subArgs[0]}] ${line}`);
+        //}
       }
       if (res.status !== 0) {
         const err = new Error(`presage-cli ${subArgs.join(' ')} exited ${res.status}`);
@@ -64,7 +64,15 @@ async function withDb(context, { requireExisting = true }, action) {
     prev = loaded.prev;
   }
   try {
-    const result = await action(runner(context, dbPath));
+    const cli = runner(context, dbPath);
+    const result = await action(cli);
+    // Every presage-cli command except `sync` itself quietly starts receiving in
+    // the background, so any operation — even a read like whoami — can leave
+    // inbound messages sitting in the local store. Wipe them before the database
+    // goes back to Sync, so we never hold a copy of anyone's message. prune-cache
+    // clears the message and thread rows (plus avatars and sticker packs) and
+    // leaves groups, contacts and key material alone.
+    cli.exec('prune-cache');
     const persistResult = await persistDb(sync, dbPath, prev);
     return { result, persistResult };
   } finally {
@@ -143,7 +151,6 @@ async function sendToGroup(context, { message, attachment_path = null }) {
     const args = ['send-to-group', '--master-key', context.GROUP_KEY, '--message', message];
     if (attachment_path) args.push('--attach', attachment_path);
     exec(...args);
-    exec('prune-cache');
   });
   return true;
 }
@@ -248,6 +255,16 @@ async function registerPrimary(context, { phone, captcha, smsWaitSeconds = 7 }) 
     await resetKeystore(sync);
   } catch (err) {
     console.warn('[signal-register] resetKeystore before persist failed (continuing):', err.message);
+  }
+
+  // register fetches initial messages after uploading pre-keys, and it runs outside
+  // withDb, so prune here too before the fresh keystore goes to Sync. Best effort,
+  // like resetKeystore above: a brand new identity has next to nothing to prune, and
+  // failing here would strand a registration that already succeeded.
+  try {
+    runner(context, dbPath).exec('prune-cache');
+  } catch (err) {
+    console.warn('[signal-register] prune-cache before persist failed (continuing):', err.message);
   }
 
   const persistResult = await persistDb(sync, dbPath, null);

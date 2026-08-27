@@ -3,13 +3,22 @@ exports.handler = function (context, event, callback) {
   const { sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
 
   const twiml = new Twilio.twiml.VoiceResponse();
+  
+  const languages = (context.LANGUAGES || 'es,en').split(',');
+  const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
+  const localizedName = hotlineName[languages.indexOf(event.language)] || messagesMap[event.language].name;
 
   if (!event.Digits) {
     const gather = twiml.gather({
       numDigits: 1,
       timeout: 15
     });
-    sayLangMap(gather, event.language, messagesMap[event.language].operator.precall.intro.replace('{name}', messagesMap[event.language].name), event.callerFrom);
+    sayLangMap(
+      gather, 
+      event.language, 
+      messagesMap[event.language].operator.precall.intro.replace('{name}', localizedName), 
+      event.callerFrom
+    );
     // By default, if no gather response happens within the timeout, reject the reservation.
     sayLangMap(
       twiml,

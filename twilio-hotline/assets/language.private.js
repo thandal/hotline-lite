@@ -135,7 +135,4 @@ const messagesMap = {
   }
 };
 
-const ES_MESSAGES = messagesMap.es;
-const EN_MESSAGES = messagesMap.en;
-
 module.exports = { langMap, sayAttrs, sayLangMap, messagesMap, formatE164 };
