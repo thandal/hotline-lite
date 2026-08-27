@@ -226,14 +226,37 @@ echo "Re-deploying the service with configuration..."
 # Configure the phone number
 echo  # (optional) move to a new line
 echo "Configuring the phone number callbacks..."
+APPLICATION_SID=`twilio api:core:applications:list \
+    | grep "$SERVICE_FRIENDLY_NAME" | awk '{ print $1 }'`
+if [ ${#APPLICATION_SID} == 34 ]
+then
+    twilio api:core:applications:update \
+        --sid $APPLICATION_SID \
+        --voice-method POST \
+        --sms-method POST \
+        --voice-url https://$SERVICE_DOMAIN_BASE-dev.twil.io/hotline \
+        --sms-url https://$SERVICE_DOMAIN_BASE-dev.twil.io/inboundMessage \
+        --status-callback https://$SERVICE_DOMAIN_BASE-dev.twil.io/clearLogs
+else
+    APPLICATION_SID=`twilio api:core:applications:create \
+        --friendly-name $SERVICE_FRIENDLY_NAME \
+        --voice-method POST \
+        --sms-method POST \
+        --voice-url https://$SERVICE_DOMAIN_BASE-dev.twil.io/hotline \
+        --sms-url https://$SERVICE_DOMAIN_BASE-dev.twil.io/inboundMessage \
+        --status-callback https://$SERVICE_DOMAIN_BASE-dev.twil.io/clearLogs \
+        | tail -n 1 | awk '{ print $1 }'`
+fi
+set_env_var "APPLICATION_SID" "$APPLICATION_SID"
+
 twilio api:core:incoming-phone-numbers:update \
     --sid $PHONE_NUMBER_SID \
-    --voice-url="https://$SERVICE_DOMAIN_BASE-dev.twil.io/hotline" \
-    --status-callback="https://$SERVICE_DOMAIN_BASE-dev.twil.io/clearCalls"
+    --voice-application-sid=$APPLICATION_SID \
+    --sms-application-sid=$APPLICATION_SID
 
 echo  # (optional) move to a new line
 echo "Done!"
 echo
-echo "Manage operators, languages, the blocklist, the shift calendar, and special"
-echo "call handling from the admin dashboard:"
+echo "Manage operators, languages, the blocklist, the shift calendar,"
+echo "and special call handling from the admin dashboard:"
 echo "  https://$SERVICE_DOMAIN_BASE-dev.twil.io/admin.html"
