@@ -1,6 +1,6 @@
-# Hotline-lite
+# Simple Hotline
 
-A simple, privacy-first Twilio-based hotline. Key features
+A simple, privacy-first Twilio-based hotline. Key features:
 * easy pseudonymous operator management
 * multilingual support
 * web-based admin interface for managing operators, blocklists, and languages
@@ -8,7 +8,7 @@ A simple, privacy-first Twilio-based hotline. Key features
 
 # Preparation
 
-* Create a twilio account: https://twilio.com
+* Create a Twilio account: https://twilio.com
   * Make a note of your twilio account SID and auth token
   * (Optional) Get a phone number: https://console.twilio.com/us1/develop/phone-numbers/manage/incoming
 * Create a shift calendar for hotline operators
@@ -118,10 +118,5 @@ Remove a function:
 
 # To-do
 
- - [X] Deliver voicemail messages left by callers to the operator group
-   - The current approach integrates with Signal, via the presage-cli, and relies on access to a remote database (because twilio serverless doesn't support cloud storage). All this is more complex than we'd like!
- - [ ] Handle incoming text messages
- - [ ] Allow operators to place outbound calls? 
-   - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
- - [X] Create a web interface for management of the operator lists, blocklists, and other config
+ - [ ] Allow operators to respond to incoming text messages
  - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU

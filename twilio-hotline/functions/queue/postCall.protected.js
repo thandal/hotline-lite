@@ -1,6 +1,7 @@
 exports.handler = async function (context, event, callback) {
   //console.log("POSTCALL " + event.taskSid + " " + event.language + " " + event.callerFrom);
   const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const callerLanguage = event.language || context.LANGUAGES.split(',')[0] || 'en';
   const twiml = new Twilio.twiml.VoiceResponse();
   if (!event.Digits) {
     const client = context.getTwilioClient();
@@ -21,16 +22,16 @@ exports.handler = async function (context, event, callback) {
     const gather = twiml.gather({ numDigits: 1 });
     sayLangMap(
       gather,
-      event.language,
-      messagesMap[event.language].operator.postcall.options,
+      callerLanguage,
+      messagesMap[callerLanguage].operator.postcall.options,
       event.callerFrom
     );
   } else if (event.Digits == 1) {
     // Repeat the caller's number
     sayLangMap(
       twiml,
-      event.language,
-      messagesMap[event.language].operator.postcall.callerNumber,
+      callerLanguage,
+      messagesMap[callerLanguage].operator.postcall.callerNumber,
       event.callerFrom
     );
     twiml.redirect('');  // Redirects to the current URL
@@ -48,16 +49,16 @@ exports.handler = async function (context, event, callback) {
     else await env.variables.create({ key: "BLOCKLIST", value: blockList });
     sayLangMap(
       twiml,
-      event.language,
-      messagesMap[event.language].operator.postcall.blocking,
+      callerLanguage,
+      messagesMap[callerLanguage].operator.postcall.blocking,
       event.callerFrom
     );
   } else if (event.Digits == 3) {
     // Call the number back
     sayLangMap(
       twiml,
-      event.language,
-      messagesMap[event.language].operator.postcall.callingBack,
+      callerLanguage,
+      messagesMap[callerLanguage].operator.postcall.callingBack,
       event.callerFrom
     );
     twiml.dial(event.callerFrom);
