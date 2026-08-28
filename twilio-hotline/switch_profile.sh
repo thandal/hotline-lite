@@ -9,11 +9,6 @@ usage() {
 [[ $# -eq 1 ]] || usage
 
 target=${1^^}
-case "$target" in
-  DEV)  profile=dev ;;
-  PROD) profile=prod;;
-  *) usage ;;
-esac
 
 cd "$(dirname "$0")"
 
@@ -27,4 +22,4 @@ for base in .env .twiliodeployinfo .twilioserverlessrc; do
   echo "$base -> $src"
 done
 
-twilio profiles:use "$profile"
+twilio profiles:use "$target"
