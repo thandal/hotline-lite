@@ -179,6 +179,7 @@
         <th>Number</th>
         <th>Pause (s)</th>
         <th>Key Sequence</th>
+        <th>Skip Menu</th>
         <th></th>
       </tr>
     </thead>
@@ -439,6 +440,7 @@
         '<td>' + escapeHtml(c.number) + '</td>' +
         '<td>' + (parseInt(c.pause, 10) || 0) + '</td>' +
         '<td>' + (c.sequence ? escapeHtml(c.sequence) : '<span style="color:#999">(allow only)</span>') + '</td>' +
+        '<td>' + (c.skipmenu ? '<input type="checkbox" checked disabled>' : '<input type="checkbox" disabled>') + '</td>' +
         '<td style="white-space:nowrap">' +
         '<button class="sec" onclick="editSeq(' + i + ')">Edit</button> ' +
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
@@ -821,15 +823,16 @@
 
   // Validate the three inputs of an add/edit row; returns a normalized
   // {number, pause, sequence} or null (after surfacing the error) on bad input.
-  function readSeqInputs(numId, pauseId, seqId) {
+  function readSeqInputs(numId, pauseId, seqId, skipMenuId) {
     var num = $(numId).value.trim();
     var pause = parseInt($(pauseId).value, 10);
     var seq = $(seqId).value.trim();
+    var skipMenu = !!$(skipMenuId) && !!$(skipMenuId).checked || false;
     if (!/^\+\d{7,15}$/.test(num)) { showError('Enter a valid E.164 number'); return null; }
     if (!SEQ_RE.test(seq)) { showError('Key sequence may contain only digits, *, #, and w'); return null; }
     if (isNaN(pause) || pause < 0) pause = 0;
     if (pause > 60) pause = 60;
-    return { number: num, pause: pause, sequence: seq };
+    return { number: num, pause: pause, sequence: seq, skipmenu: skipMenu };
   }
 
   function saveSequences(next, label, after) {
@@ -840,7 +843,7 @@
   }
 
   window.addSeq = function () {
-    var item = readSeqInputs('sNum', 'sPause', 'sSeq');
+    var item = readSeqInputs('sNum', 'sPause', 'sSeq', 'sMenu');
     if (!item) return;
     var next = (DATA.connectionSequences || []).concat([item]);
     saveSequences(next, 'Add call handling', function () {
@@ -856,13 +859,14 @@
       '<td><input id="eSeqNum" value="' + escapeHtml(c.number) + '" style="width:100%"></td>' +
       '<td><input id="eSeqPause" type="number" min="0" step="1" value="' + (parseInt(c.pause, 10) || 0) + '" style="width:100%"></td>' +
       '<td><input id="eSeqSeq" value="' + escapeHtml(c.sequence) + '" style="width:100%"></td>' +
+      '<td><input id="eSeqMenu" type="checkbox" ' + (c.skipmenu ? 'checked' : '') + '></td>' +
       '<td style="white-space:nowrap">' +
       '<button onclick="saveSeq(' + i + ')">Save</button> ' +
       '<button class="sec" onclick="render()">Cancel</button></td>';
   };
 
   window.saveSeq = function (i) {
-    var item = readSeqInputs('eSeqNum', 'eSeqPause', 'eSeqSeq');
+    var item = readSeqInputs('eSeqNum', 'eSeqPause', 'eSeqSeq', 'eSeqMenu');
     if (!item) return;
     var next = (DATA.connectionSequences || []).map(function (c, j) { return j === i ? item : c; });
     saveSequences(next, 'Update call handling');
