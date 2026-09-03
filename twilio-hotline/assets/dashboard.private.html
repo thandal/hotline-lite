@@ -1,4 +1,8 @@
 <style>
+  h1 {
+    text-transform: capitalize;
+  }
+  
   h2 {
     margin: 20px 0 8px;
     font-size: 1.1em;
@@ -108,7 +112,7 @@
   }
 </style>
 
-<h1>Hotline Admin <button class="sec" onclick="logout()" style="float:right">Log Out</button></h1>
+<h1 id="title">Hotline Admin <button class="sec" onclick="logout()" style="float:right">Log Out</button></h1>
 <div id="msg" class="msg hide"></div>
 
 <div class="card">
@@ -403,6 +407,13 @@
   }
 
   function render() {
+    if (DATA.hotlineName && DATA.languages.indexOf('en') !== -1) {
+      var enName = DATA.hotlineName[DATA.languages.indexOf('en')];
+      if ($('title').innerHTML.indexOf(enName) === -1) {
+        $('title').prepend(enName.replace(/\s+hotline\s*$/i, '') + ' ');
+      }
+    }
+
     $('opBody').innerHTML = DATA.operators.length ? DATA.operators.map(function (op) {
       var names = Array.isArray(op.names) ? op.names.join(', ') : op.names;
       var langs = Array.isArray(op.languages) ? op.languages.join(', ') : op.languages;
