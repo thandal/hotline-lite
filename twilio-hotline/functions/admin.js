@@ -213,9 +213,10 @@ exports.handler = async function (context, event, callback) {
       const clean = [];
       for (const item of raw) {
         const number = ((item && item.number) || '').toString().trim();
+        const name = ((item && item.name) || '').toString().trim();
         const sequence = ((item && item.sequence) || '').toString().trim();
         let pause = parseInt(item && item.pause, 10);
-        let skipmenu = (item && !!item.skipmenu);
+        let skipmenu = !!(item && item.skipmenu) ? item.skipmenu : false;
         if (!Number.isFinite(pause) || pause < 0) pause = 0;
         if (pause > 60) pause = 60;
         if (!E164.test(number) || !SEQ.test(sequence)) {
@@ -223,7 +224,7 @@ exports.handler = async function (context, event, callback) {
           resp.setBody({ error: 'Each entry needs a valid E.164 number; the optional key sequence may contain only digits, *, #, or w' });
           return callback(null, resp);
         }
-        clean.push({ number, pause, sequence, skipmenu });
+        clean.push({ number, name, pause, sequence, skipmenu });
       }
       const value = JSON.stringify(clean);
       const v = vars.find(v => v.key === 'CONNECTION_SEQUENCES');

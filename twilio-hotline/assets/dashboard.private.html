@@ -169,6 +169,7 @@
   </label>
   <div class="row">
     <input id="sNum" placeholder="+12025551234">
+    <input id="sName" placeholder="Friendly name">
     <input id="sPause" type="number" min="0" step="1" style="max-width:90px" placeholder="Pause (s)">
     <input id="sSeq" placeholder="Keys, e.g. 1w# (blank = allow only)" pattern="[0-9*#wW]*">
     <button onclick="addSeq()">Add</button>
@@ -177,6 +178,7 @@
     <thead>
       <tr>
         <th>Number</th>
+        <th>Friendly Name</th>
         <th>Pause (s)</th>
         <th>Key Sequence</th>
         <th>Skip Menu</th>
@@ -438,9 +440,10 @@
     $('seqBody').innerHTML = seqs.length ? seqs.map(function (c, i) {
       return '<tr id="seqrow-' + i + '">' +
         '<td>' + escapeHtml(c.number) + '</td>' +
+        '<td>' + escapeHtml(c.name) + '</td>' +
         '<td>' + (parseInt(c.pause, 10) || 0) + '</td>' +
         '<td>' + (c.sequence ? escapeHtml(c.sequence) : '<span style="color:#999">(allow only)</span>') + '</td>' +
-        '<td>' + (c.skipmenu ? '<input type="checkbox" checked disabled>' : '<input type="checkbox" disabled>') + '</td>' +
+        '<td>' + (c.skipmenu ? (c.skipmenu === true ? '<input type="checkbox" checked disabled>' : '<span style="color:#999">' + c.skipmenu + '</span>') : '<input type="checkbox" disabled>') + '</td>' +
         '<td style="white-space:nowrap">' +
         '<button class="sec" onclick="editSeq(' + i + ')">Edit</button> ' +
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
@@ -823,16 +826,19 @@
 
   // Validate the three inputs of an add/edit row; returns a normalized
   // {number, pause, sequence} or null (after surfacing the error) on bad input.
-  function readSeqInputs(numId, pauseId, seqId, skipMenuId) {
+  function readSeqInputs(numId, nameId, pauseId, seqId, skipMenuId) {
     var num = $(numId).value.trim();
+    var name = $(nameId).value.trim();
     var pause = parseInt($(pauseId).value, 10);
     var seq = $(seqId).value.trim();
-    var skipMenu = !!$(skipMenuId) && !!$(skipMenuId).checked || false;
+    var skipMenu = !!$(skipMenuId) ? $(skipMenuId).value.trim() : false;
     if (!/^\+\d{7,15}$/.test(num)) { showError('Enter a valid E.164 number'); return null; }
     if (!SEQ_RE.test(seq)) { showError('Key sequence may contain only digits, *, #, and w'); return null; }
     if (isNaN(pause) || pause < 0) pause = 0;
     if (pause > 60) pause = 60;
-    return { number: num, pause: pause, sequence: seq, skipmenu: skipMenu };
+    if (skipMenu === 'true') skipMenu = true;
+    if (skipMenu === 'false') skipMenu = false;
+    return { number: num, name: name, pause: pause, sequence: seq, skipmenu: skipMenu };
   }
 
   function saveSequences(next, label, after) {
@@ -843,11 +849,11 @@
   }
 
   window.addSeq = function () {
-    var item = readSeqInputs('sNum', 'sPause', 'sSeq', 'sMenu');
+    var item = readSeqInputs('sNum', 'sName', 'sPause', 'sSeq', 'sMenu');
     if (!item) return;
     var next = (DATA.connectionSequences || []).concat([item]);
     saveSequences(next, 'Add call handling', function () {
-      $('sNum').value = ''; $('sSeq').value = ''; $('sPause').value = '';
+      $('sNum').value = ''; $('sName').value = ''; $('sSeq').value = ''; $('sPause').value = '';
     });
   };
 
@@ -857,16 +863,17 @@
     var row = $('seqrow-' + i);
     row.innerHTML =
       '<td><input id="eSeqNum" value="' + escapeHtml(c.number) + '" style="width:100%"></td>' +
+      '<td><input id="eSeqName" value="' + escapeHtml(c.name) + '" style="width:100%"></td>' +
       '<td><input id="eSeqPause" type="number" min="0" step="1" value="' + (parseInt(c.pause, 10) || 0) + '" style="width:100%"></td>' +
       '<td><input id="eSeqSeq" value="' + escapeHtml(c.sequence) + '" style="width:100%"></td>' +
-      '<td><input id="eSeqMenu" type="checkbox" ' + (c.skipmenu ? 'checked' : '') + '></td>' +
+      '<td>' + (!!c.skipmenu ? '<select id="eSeqMenu"><option value="true"' + (c.skipmenu === true ? ' selected' : '') + '>Any language</option>' + DATA.languages.map(function (l, i) { return '<option value="' + l + '"' + (c.skipmenu === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '<option value="false">Don\'t skip menu</option></select>' : '<input id="eSeqMenu" type="checkbox">') + '</td>' +
       '<td style="white-space:nowrap">' +
       '<button onclick="saveSeq(' + i + ')">Save</button> ' +
       '<button class="sec" onclick="render()">Cancel</button></td>';
   };
 
   window.saveSeq = function (i) {
-    var item = readSeqInputs('eSeqNum', 'eSeqPause', 'eSeqSeq', 'eSeqMenu');
+    var item = readSeqInputs('eSeqNum', 'eSeqName', 'eSeqPause', 'eSeqSeq', 'eSeqMenu');
     if (!item) return;
     var next = (DATA.connectionSequences || []).map(function (c, j) { return j === i ? item : c; });
     saveSequences(next, 'Update call handling');

@@ -78,7 +78,7 @@ exports.handler = async function (context, event, callback) {
     twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
   } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1 || skipMenu) {
-    var key = languages[0];
+    var key = (skipMenu && callerSequence.skipmenu !== true) ? callerSequence.skipmenu : languages[0];
     if (languages.length == 1) {
       // No language selection needed if there is just one language!
       twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
