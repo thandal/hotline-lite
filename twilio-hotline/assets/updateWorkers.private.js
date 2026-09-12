@@ -59,6 +59,17 @@ function getWorkerDirectory(context) {
   return workerDirectory;
 }
 
+function getWorkerNumbers(context) {
+  const operatorsByName = getWorkerDirectory(context);
+  return Object.values(operatorsByName).map(w => w.phone);
+}
+
+function isOperator(context, event) {
+  // Returns true if the caller is an operator, false otherwise.
+  const operatorsByName = getWorkerDirectory(context);
+  return Object.values(operatorsByName).map(w => w.phone).includes(event.From);
+}
+
 // A reason string safe to put in a Signal message. A calendar feed URL is often
 // secret-bearing (Google's "secret address"), and axios error messages can embed
 // the host, so report only the status or the network error code.
@@ -120,7 +131,7 @@ function allOperatorsOnCall(operatorsByName) {
   return onCall;
 }
 
-const updateWorkers = async function (context) {
+const updateWorkers = async function (context, event) {
   console.log("Updating workers...");
   const operatorsByName = getWorkerDirectory(context);
 
@@ -213,6 +224,8 @@ const updateWorkers = async function (context) {
     }
   }
   console.log("Done updating workers");
+  // Return true if the caller is an operator on call, false otherwise.
+  return Object.values(workersByName).map(w => w.phone).includes(event.From);
 };
 
 module.exports = { updateWorkers };
