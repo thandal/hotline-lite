@@ -294,6 +294,21 @@
 </div>
 
 <div class="card">
+  <h2>Autoresponder</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    Send an automatic text reply to every incoming SMS, WhatsApp, and Signal direct message 
+    if the sender isn't on the block list and they haven't been sent a message in the past 7 days. 
+    Leave blank to disable.
+  </p>
+  <div class="row">
+      <input id="autoresponderMessage" placeholder="" autocomplete="off">
+    </div>
+    <div class="row">
+      <button onclick="saveAutoresponder(this)">Save</button>
+    </div>
+</div>
+
+<div class="card">
   <h2>Recent SMS</h2>
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     The most recent text messages received by the hotline number. Refreshes on its own as new messages arrive.
@@ -456,6 +471,7 @@
     }).join('') : '<tr><td colspan="4" style="color:#999">None</td></tr>';
     if ($('allowlistOnly')) $('allowlistOnly').checked = !!DATA.allowlistOnly;
     if ($('icsUrl')) $('icsUrl').value = DATA.icsUrl || '';
+    if ($('autoresponderMessage')) $('autoresponderMessage').value = DATA.autoresponderMessage || '';
 
     renderUsage();
   }
@@ -816,6 +832,21 @@
       return api({ action: 'update-ics-url', icsUrl: url })
         .then(reloadStatus)
         .catch(catcher('Save calendar'));
+    });
+  };
+
+  window.saveAutoresponder = function (btn) {
+    var message = $('autoresponderMessage').value.trim();
+      // Clearing the feed leaves worker sync with nothing to fetch, which breaks
+    // the on-call schedule — confirm before removing it.
+    if (!message && DATA.autoresponderMessage &&
+        !confirm('Clear the autoresponder message? Incoming messages will receive no response.')) {
+      return;
+    }
+    withButton(btn, 'Saving...', function () {
+      return api({ action: 'update-autoresponder', autoresponderMessage: message })
+        .then(reloadStatus)
+        .catch(catcher('Save autoresponder message'));
     });
   };
 

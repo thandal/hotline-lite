@@ -73,6 +73,23 @@ exports.handler = async function (context, event, callback) {
   // This is a workaround for Twilio runtime errors that can occur 
   // if the function returns too quickly.
   await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const hotlineWithProtocol = event.From.includes(context.HOTLINE_PHONE_NUMBER) ? event.From : context.HOTLINE_PHONE_NUMBER;
+  const recentSenders = await twilioClient.messages.list({ 
+    from: hotlineWithProtocol, 
+    dateSentAfter: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) })
+  .map(m => m.to);
+  if (!recentSenders.includes(hotlineWithProtocol)) {
+    const autoresponderMessage = context.AUTORESPONDER_MESSAGE || '';
+    if (autoresponderMessage) {
+      await twilioClient.messages.create({
+        from: hotlineWithProtocol,
+        to: event.From,
+        body: autoresponderMessage
+      });
+    }
+  }
+
   return callback(null, '');
 
 }
