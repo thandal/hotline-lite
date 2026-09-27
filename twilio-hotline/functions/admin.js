@@ -205,6 +205,21 @@ exports.handler = async function (context, event, callback) {
       }
       resp.setBody({ ok: true });
 
+    } else if (event.action === 'update-wait-messages') {
+      // A language-indexed WAIT_MESSAGES is read as one message per language, in
+      // LANGUAGES order (see hotline.protected.js). An empty list clears the var
+      const waitMessages = (event.waitMessages || []).map(s => s.trim());
+      const value = JSON.stringify(waitMessages);
+      const v = vars.find(v => v.key === 'WAIT_MESSAGES');
+      if (!waitMessages) {
+        if (v) await env.variables(v.sid).remove();
+      } else if (v) {
+        await env.variables(v.sid).update({ value });
+      } else {
+        await env.variables.create({ key: 'WAIT_MESSAGES', value });
+      }
+      resp.setBody({ ok: true });
+
     } else if (event.action === 'update-connection-sequences') {
       // Special call handling: a single CONNECTION_SEQUENCES var holds the whole
       // list as JSON [{number, pause, sequence}, ...]. The dashboard edits the
