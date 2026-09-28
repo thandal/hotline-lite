@@ -10,7 +10,8 @@ exports.handler = async function (context, event, callback) {
   const recording_url = event.RecordingUrl + '.mp3';
   const attachment_path = await prepareAttachment(context, recording_url, attachment_filename);
 
-  const languageName = langMap[event.language] ? langMap[event.language].name : event.language;
+  const callerLanguage = event.language || context.LANGUAGES.split(',')[0] || 'en';
+  const languageName = langMap[callerLanguage] ? langMap[callerLanguage].name : callerLanguage;
   await notify(context, 'New voice memo in ' + languageName + ' from ' + formatE164(event.callerFrom), attachment_path);
   
   return callback(null, 'OK');
