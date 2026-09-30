@@ -209,6 +209,14 @@
   <div class="row">
     <button onclick="saveHotlineName(this)">Save</button>
   </div>
+  <h2>Wait Message</h2>
+    <p style="font-size:13px;color:#555;margin-bottom:8px">
+      Play this message while callers wait to be connected with an operator. This can be a sentence or phrase, or a URL to an audio file.
+    </p>
+    <div id="waitMessageList"></div>
+    <div class="row">
+      <button onclick="saveWaitMessages(this)">Save</button>
+    </div>
 </div>
 
 <div class="card">
@@ -269,6 +277,19 @@
       <button onclick="sendMessage(this)">Send to group</button>
     </div>
 
+    <h3>Autoresponder</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:8px">
+      Send an automatic text reply to every incoming SMS, WhatsApp, and Signal direct message 
+      if the sender isn't on the block list and they haven't been sent a message in the past 7 days. 
+      Leave blank to disable.
+    </p>
+    <div class="row">
+      <input id="autoresponderMessage" placeholder="" autocomplete="off">
+    </div>
+    <div class="row">
+      <button onclick="saveAutoresponder(this)">Save</button>
+    </div>
+
     <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Keystore import / export</h3>
     <p style="font-size:12px;color:#888;margin-bottom:6px">
       Download the decrypted SQLite DB to run presage-cli locally (diagnostics). Upload replaces the Sync keystore with
@@ -290,30 +311,6 @@
     <div id="sigDebug"
       style="font-size:11px;color:#aaa;margin-top:16px;padding-top:8px;border-top:1px solid #eee;font-family:ui-monospace,monospace">
     </div>
-  </div>
-</div>
-
-<div class="card">
-  <h2>Autoresponder</h2>
-  <p style="font-size:13px;color:#555;margin-bottom:8px">
-    Send an automatic text reply to every incoming SMS, WhatsApp, and Signal direct message 
-    if the sender isn't on the block list and they haven't been sent a message in the past 7 days. 
-    Leave blank to disable.
-  </p>
-  <div class="row">
-      <input id="autoresponderMessage" placeholder="" autocomplete="off">
-    </div>
-    <div class="row">
-      <button onclick="saveAutoresponder(this)">Save</button>
-    </div>
-  </div>
-  <h2>Wait Message</h2>
-  <p style="font-size:13px;color:#555;margin-bottom:8px">
-    Play this message while callers wait to be connected with an operator. This can be a sentence or phrase, or a URL to an audio file.
-  </p>
-  <div id="waitMessageList"></div>
-  <div class="row">
-    <button onclick="saveWaitMessages(this)">Save</button>
   </div>
 </div>
 
@@ -469,10 +466,10 @@
     }).join('') : '<p style="color:#999;font-size:14px">Add a language first</p>';
 
     $('waitMessageList').innerHTML = DATA.languages.length ? DATA.languages.map(function (l, i) {
-      var val = (DATA.waitMessages && DATA.waitMessages[i]) || '';
+      var val = (DATA.waitMessages && DATA.waitMessages[l]) || '';
       return '<div class="row" style="align-items:center">' +
         '<span class="tag" style="align-self:center">' + l + '</span>' +
-        '<input id="name-' + i + '" value="' + escapeHtml(val) + '" placeholder="(omit custom message)">' +
+        '<input id="wait-message-' + l + '" value="' + escapeHtml(val) + '" placeholder="(omit custom message)">' +
         '</div>';
     }).join('') : '<p style="color:#999;font-size:14px">Add a language first</p>';
 
@@ -835,10 +832,9 @@
   };
 
   window.saveWaitMessages = function (btn) {
-    var waitMessages = DATA.languages.map(function (_, i) { return $('wait-message-' + i).value.trim(); });
-    var filled = waitMessages.filter(Boolean);
+    var waitMessages = Object.fromEntries(DATA.languages.map(l => [l, $('wait-message-' + l).value.trim()]));
     withButton(btn, 'Saving...', function () {
-      return api({ action: 'update-wait-messages', waitMessages: filled.length ? waitMessages : false })
+      return api({ action: 'update-wait-messages', waitMessages: Object.keys(waitMessages).length ? waitMessages : false })
         .then(reloadStatus)
         .catch(catcher('Save wait messages'));
     });

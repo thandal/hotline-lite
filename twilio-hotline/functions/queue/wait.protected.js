@@ -7,24 +7,21 @@ exports.handler = function (context, event, callback) {
   // Twilio will loop this call while the user is waiting.
   const twiml = new Twilio.twiml.VoiceResponse();
   if (!event.Digits) {
+    const gather = twiml.gather({ numDigits: 1 })
+    sayLangMap(gather, callerLanguage, messagesMap[callerLanguage].caller.wait.connecting);
     if (signalConfigured) {
-      const gather = twiml.gather({ numDigits: 1 })
-      sayLangMap(gather, event.language, messagesMap[event.language].caller.wait.connecting);
       gather.pause({ length: 2 });
       sayLangMap(gather, event.language, messagesMap[event.language].caller.wait.leaveAMessage);
-      if (waitMessage) {
+    }
+    if (waitMessage) {
+      gather.pause({ length: 2 });
+      if (/^https.*(?:wav|mp3)$/i.test(waitMessage)) {
+        gather.play(waitMessage);
         gather.pause({ length: 2 });
-        if (/^https.*(?:wav|mp3)$/i.test(waitMessage)) {
-          gather.play(waitMessage);
-          gather.pause({ length: 2 });
-        } else {
-          sayLangMap(gather, event.language, waitMessage);
-          gather.pause({ length: 2 });
-        }
+      } else {
+        sayLangMap(gather, event.language, waitMessage);
+        gather.pause({ length: 2 });
       }
-    } else {
-      sayLangMap(twiml, event.language, messagesMap[event.language].caller.wait.connecting);
-      twiml.pause({ length: 2 });
     }
   } else if (signalConfigured) {
     // NOTE: record() isn't supported in waitUrl documents, so we
