@@ -74,16 +74,16 @@ exports.handler = async function (context, event, callback) {
   // if the function returns too quickly.
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  const hotlineWithProtocol = event.From.includes(context.HOTLINE_PHONE_NUMBER) ? event.From : context.HOTLINE_PHONE_NUMBER;
+  const hotlineNumberWithProtocol = event.From.includes(context.HOTLINE_PHONE_NUMBER) ? event.From : context.HOTLINE_PHONE_NUMBER;
   const recentSenders = await twilioClient.messages.list({ 
-    from: hotlineWithProtocol, 
+    from: hotlineNumberWithProtocol, 
     dateSentAfter: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) })
   .map(m => m.to);
-  if (!recentSenders.includes(hotlineWithProtocol)) {
+  if (!recentSenders.includes(hotlineNumberWithProtocol)) {
     const autoresponderMessage = context.AUTORESPONDER_MESSAGE || '';
     if (autoresponderMessage) {
       await twilioClient.messages.create({
-        from: hotlineWithProtocol,
+        from: hotlineNumberWithProtocol,
         to: event.From,
         body: autoresponderMessage
       });

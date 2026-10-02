@@ -100,7 +100,7 @@ const messagesMap = {
     }
   },
   es: {
-    name: "la linea directa comunitaria",
+    name: "la línea comunitaria",
     caller: {
       welcome: {
         hello: "Gracias por llamar a {name}.",

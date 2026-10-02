@@ -132,8 +132,8 @@ async function statusBundle(context) {
 // for outbound SMS in queue/assignment.protected.js).
 function autoReplyMessage(context) {
   const phone = (context.HOTLINE_PHONE_NUMBER || '').trim();
-  const callTo = phone ? ` at ${phone}` : '';
-  return `Hi! This account is automated and only sends hotline notifications. To reach a human, please call the hotline directly${callTo}.`;
+  const callTo = phone ? ` To reach a human, please call ${phone}.` : '';
+  return context.AUTORESPONDER_MESSAGE || `Thanks for your message! This is an automated response from the hotline.${callTo}`;
 }
 
 async function listGroups(context) {
