@@ -94,6 +94,12 @@ exports.handler = async function (context, event, callback) {
       const allowlistOnly = av ? av.value === 'true' : false;
       const iv = vars.find(v => v.key === 'ICS_URL');
       const icsUrl = iv ? iv.value : '';
+      const arv = vars.find(v => v.key === 'AUTORESPONDER_MESSAGE');
+      const autoresponderMessage = arv ? arv.value : '';
+      let obj = vars.find(v => v.key === 'WAIT_MESSAGES');
+      let waitMessages = {};
+      if (obj && Object.keys(obj).length) { try { waitMessages = JSON.parse(obj.value); } catch { waitMessages = []; } }
+      if (typeof waitMessages !== 'object' || Array.isArray(waitMessages) || waitMessages === null) waitMessages = [];
 
       // Usage summary for the dashboard. Isolated so a usage-API failure leaves
       // the rest of the status payload intact. The base records resource defaults
@@ -122,7 +128,7 @@ exports.handler = async function (context, event, callback) {
         console.error('usage_fetch_failed ' + (e.message || e));
       }
 
-      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
+      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage, autoresponderMessage, waitMessages });
 
     } else if (event.action === 'list-sms') {
       // Twilio records inbound messages in the Messages log whether or not the
@@ -203,6 +209,21 @@ exports.handler = async function (context, event, callback) {
       }
       resp.setBody({ ok: true });
 
+    } else if (event.action === 'update-wait-messages') {
+      // A language-indexed WAIT_MESSAGES is read as one message per language, in
+      // LANGUAGES order (see hotline.protected.js). An empty list clears the var
+      const waitMessages = event.waitMessages || [];
+      const value = JSON.stringify(waitMessages);
+      const v = vars.find(v => v.key === 'WAIT_MESSAGES');
+      if (!waitMessages) {
+        if (v) await env.variables(v.sid).remove();
+      } else if (v) {
+        await env.variables(v.sid).update({ value });
+      } else {
+        await env.variables.create({ key: 'WAIT_MESSAGES', value });
+      }
+      resp.setBody({ ok: true });
+
     } else if (event.action === 'update-connection-sequences') {
       // Special call handling: a single CONNECTION_SEQUENCES var holds the whole
       // list as JSON [{number, pause, sequence}, ...]. The dashboard edits the
@@ -256,6 +277,20 @@ exports.handler = async function (context, event, callback) {
         await env.variables(v.sid).update({ value });
       } else {
         await env.variables.create({ key: 'ICS_URL', value });
+      }
+      resp.setBody({ ok: true });
+
+    } else if (event.action === 'update-autoresponder') {
+      // AUTORESPONDER_MESSAGE is the text message sent to any inbound SMS when
+      // no operator is available. An empty value removes the var.
+      const value = (event.autoresponderMessage || '').toString().trim();
+      const v = vars.find(v => v.key === 'AUTORESPONDER_MESSAGE');
+      if (value === '') {
+        if (v) await env.variables(v.sid).remove();
+      } else if (v) {
+        await env.variables(v.sid).update({ value });
+      } else {
+        await env.variables.create({ key: 'AUTORESPONDER_MESSAGE', value });
       }
       resp.setBody({ ok: true });
 

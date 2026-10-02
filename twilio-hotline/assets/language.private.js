@@ -75,7 +75,7 @@ const messagesMap = {
       },
       wait: {
         connecting: "Someone will be with you shortly.",
-        leaveAMessage: "Please remain on the line, or press 5 to leave a message.",
+        leaveAMessage: "Please remain on the line, or press any key to leave a message.",
       },
       record: {
         prompt: "Please leave a message after the tone.",
@@ -100,7 +100,7 @@ const messagesMap = {
     }
   },
   es: {
-    name: "la linea directa comunitaria",
+    name: "la línea comunitaria",
     caller: {
       welcome: {
         hello: "Gracias por llamar a {name}.",
@@ -109,7 +109,7 @@ const messagesMap = {
       },
       wait: {
         connecting: "Alguien estará con usted en breve.",
-        leaveAMessage: "Por favor, permanezca en la línea o presione 5 para dejar un mensaje.",
+        leaveAMessage: "Por favor, permanezca en la línea o presione cualquier tecla para dejar un mensaje.",
       },
       record: {
         prompt: "Por favor, deje un mensaje después del tono.",
