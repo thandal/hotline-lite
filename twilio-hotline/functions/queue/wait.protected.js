@@ -3,7 +3,9 @@ exports.handler = function (context, event, callback) {
   // Voice memos are delivered over Signal; without an active group (GROUP_KEY)
   // a recording would go nowhere, so don't offer to take one.
   const signalConfigured = !!context.GROUP_KEY;
-  const waitMessage = (context.WAIT_MESSAGES) ? JSON.parse(context.WAIT_MESSAGES)[event.language] : false;
+  const waitMessages = context.WAIT_MESSAGES ? JSON.parse(context.WAIT_MESSAGES) : {};
+  const callerLanguage = event.language || context.LANGUAGES.split(',')[0] || 'en';
+  const localizedWaitMessage = waitMessages[callerLanguage] || false;
   // Twilio will loop this call while the user is waiting.
   const twiml = new Twilio.twiml.VoiceResponse();
   if (!event.Digits) {
@@ -11,15 +13,15 @@ exports.handler = function (context, event, callback) {
     sayLangMap(gather, callerLanguage, messagesMap[callerLanguage].caller.wait.connecting);
     if (signalConfigured) {
       gather.pause({ length: 2 });
-      sayLangMap(gather, event.language, messagesMap[event.language].caller.wait.leaveAMessage);
+      sayLangMap(gather, callerLanguage, messagesMap[callerLanguage].caller.wait.leaveAMessage);
     }
-    if (waitMessage) {
+    if (localizedWaitMessage) {
       gather.pause({ length: 2 });
-      if (/^https.*(?:wav|mp3)$/i.test(waitMessage)) {
-        gather.play(waitMessage);
+      if (/^https.*(?:wav|mp3)$/i.test(localizedWaitMessage)) {
+        gather.play(localizedWaitMessage);
         gather.pause({ length: 2 });
       } else {
-        sayLangMap(gather, event.language, waitMessage);
+        sayLangMap(gather, callerLanguage, localizedWaitMessage);
         gather.pause({ length: 2 });
       }
     }
