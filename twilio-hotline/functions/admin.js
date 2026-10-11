@@ -399,6 +399,8 @@ exports.handler = async function (context, event, callback) {
       resp.setBody({ ok: true });
 
     } else if (event.action === 'signal-list-groups') {
+      const syncSid = await ensureSyncService(client, env, vars);
+      context.SYNC_SERVICE_SID = syncSid;
       const signal = require(Runtime.getAssets()['/signalOps.js'].path);
       const groups = await signal.listGroups(context);
       resp.setBody({ groups });
