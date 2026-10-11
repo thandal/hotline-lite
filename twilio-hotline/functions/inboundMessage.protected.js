@@ -75,11 +75,11 @@ exports.handler = async function (context, event, callback) {
   await new Promise(resolve => setTimeout(resolve, 2000));
 
   const hotlineNumberWithProtocol = event.From.includes(context.HOTLINE_PHONE_NUMBER) ? event.From : context.HOTLINE_PHONE_NUMBER;
-  const recentSenders = await twilioClient.messages.list({ 
+  const recentOutboundMessages = await twilioClient.messages.list({ 
     from: hotlineNumberWithProtocol, 
-    dateSentAfter: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) })
-  .map(m => m.to);
-  if (!recentSenders.includes(hotlineNumberWithProtocol)) {
+    dateSentAfter: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) });
+  recentRecipients = [...new Set(recentOutboundMessages.map(m => m.to))];
+  if (!recentRecipients.includes(hotlineNumberWithProtocol)) {
     const autoresponderMessage = context.AUTORESPONDER_MESSAGE || '';
     if (autoresponderMessage) {
       await twilioClient.messages.create({
@@ -87,6 +87,7 @@ exports.handler = async function (context, event, callback) {
         to: event.From,
         body: autoresponderMessage
       });
+      console.log('Sent autoresponder message from', hotlineNumberWithProtocol, 'to', event.From, 'with body:', autoresponderMessage);
     }
   }
 
