@@ -77,11 +77,25 @@ All data is stored securely in Twilio Serverless environment variables.
 ## Blocklist
 Manage the blocklist from the admin dashboard (the **Blocklist** panel). Operators can also add a caller's number to the blocklist at the end of a call.
 
-## Cost
+# Cost
 
 The hotline has been developed by volunteers. However, it is not free to run.
 Deploying and operating this hotline will cost you $1 per month + ~$0.02 per inbound minute.
 These fees are managed by and payable to Twilio.
+
+# Sending Messages
+
+In order to send text messages through the hotline, Twilio requires you to submit additional information through their developer console. You must first file a <a href="https://1console.twilio.com/us1/develop/trusthub/compliance-profiles/primary">Compliance Profile</a>, then take additional steps if you wish to send and receive WhatsApp messages.
+
+## Required: Compliance Profile
+
+A Primary Compliance Profile is required in order to send messages in the United States using the Twilio platform. Twilio documents <a href="https://www.twilio.com/docs/trust-hub/profiles/primary-compliance-profiles">this process</a> on their website.
+
+## _Optional: WhatsApp Messaging Service_
+
+In order to enable WhatsApp messaging, you must first create a <a href="https://1console.twilio.com/us1/develop/senders-hub/list/whatsapp">WhatsApp Sender</a> for your hotline number. In this process, you will need to link a WhatsApp Business Account. Twilio provides robust <a href="https://www.twilio.com/docs/whatsapp/self-sign-up#setting-up-your-twilio-phone-number-to-receive-the-verification-code-via-email-using-voicemail-transcription">documentation</a> of this process on their website.
+
+Once you have created a WhatsApp Sender for the number, you must also create a <a href="https://1console.twilio.com/us1/develop/messaging/messaging-services">Messaging Service</a>. Under the "Senders" tab, add only the WhatsApp Sender to this Messaging Service. Under the "Settings" tab, ensure that the Messaging Service "defers to the sender's webhook" for inbound messages.
 
 # Overview diagram
 
@@ -118,10 +132,6 @@ Remove a function:
 
 # To-do
 
- - [X] Deliver voicemail messages left by callers to the operator group
-   - The current approach integrates with Signal, via the presage-cli, and relies on access to a remote database (because twilio serverless doesn't support cloud storage). All this is more complex than we'd like!
- - [ ] Handle incoming text messages
  - [ ] Allow operators to place outbound calls? 
-   - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
- - [X] Create a web interface for management of the operator lists, blocklists, and other config
+ - [ ] Allow known numbers to bypass the language menu
  - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU
