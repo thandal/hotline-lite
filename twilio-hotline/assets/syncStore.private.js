@@ -239,16 +239,21 @@ async function persistDb(sync, dbPath, prevMeta) {
     throw err;
   }
 
-  // Best-effort cleanup: if the target slot previously held more chunks than
-  // we just wrote, delete the stragglers so they don't confuse a future read.
-  const prevSlotInfo = prevData.slots && prevData.slots[target];
-  const prevTotal = (prevSlotInfo && prevSlotInfo.total_chunks) || 0;
-  if (prevTotal > chunks.length) {
-    const stale = Array.from(
-      { length: prevTotal - chunks.length },
-      (_, i) => chunkDocName(target, chunks.length + i)
-    );
-    await parallelLimit(stale, (n) => removeDoc(sync, n), PARALLELISM);
+  // Best-effort cleanup: delete chunk documents beyond each slot's live count
+  // in the meta we just wrote. Working from a fresh listing (rather than the
+  // previous meta) makes this self-healing: chunks that survive one pass —
+  // rate limits, timeouts — are retired by any later persist's pass.
+  try {
+    const docs = await sync.documents.list({ limit: 2000 });
+    const liveCount = (slot) =>
+      (newMeta.slots[slot] && newMeta.slots[slot].total_chunks) || 0;
+    const stale = docs.filter((d) => {
+      const m = /^keystore-([ab])-chunk-(\d{5})$/.exec(d.uniqueName || '');
+      return m && Number(m[2]) >= liveCount(m[1]);
+    });
+    await parallelLimit(stale, (d) => removeDoc(sync, d.uniqueName), PARALLELISM);
+  } catch (err) {
+    console.warn(`[syncStore] stale chunk sweep failed: ${err.message}`);
   }
 
   return { slot: target, totalChunks: chunks.length, sizeBytes: db.length, compressedBytes: stored.length, sha256: sha };

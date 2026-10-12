@@ -53,7 +53,7 @@ exports.handler = async function (context, event, callback) {
     }
     if (event.password !== context.ADMIN_PASSWORD) {
       resp.setStatusCode(401);
-      resp.setBody({ error: 'Invalid password' });
+      resp.setBody({ warning: 'Invalid password' });
       return callback(null, resp);
     }
     const salt = crypto.randomBytes(16).toString('hex');
@@ -65,7 +65,7 @@ exports.handler = async function (context, event, callback) {
   if (!event.token || !event.salt ||
       !crypto.timingSafeEqual(Buffer.from(event.token), Buffer.from(token(context, event.salt)))) {
     resp.setStatusCode(401);
-    resp.setBody({ error: 'Unauthorized' });
+    resp.setBody({ warning: 'Unauthorized' });
     return callback(null, resp);
   }
 
@@ -366,6 +366,8 @@ exports.handler = async function (context, event, callback) {
       resp.setBody({ ok: true });
 
     } else if (event.action === 'signal-list-groups') {
+      const syncSid = await ensureSyncService(client, env, vars);
+      context.SYNC_SERVICE_SID = syncSid;
       const signal = require(Runtime.getAssets()['/signalOps.js'].path);
       const groups = await signal.listGroups(context);
       resp.setBody({ groups });
