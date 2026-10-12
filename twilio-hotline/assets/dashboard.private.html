@@ -181,7 +181,7 @@
         <th>Friendly Name</th>
         <th>Pause (s)</th>
         <th>Key Sequence</th>
-        <th>Skip Menu</th>
+        <th>Language</th>
         <th></th>
       </tr>
     </thead>
@@ -406,6 +406,13 @@
   }
 
   function render() {
+    if (DATA.hotlineName && DATA.languages.indexOf('en') !== -1) {
+      var enName = DATA.hotlineName[DATA.languages.indexOf('en')];
+      if ($('title').innerHTML.toLowerCase().indexOf(enName.toLowerCase()) === -1) {
+        $('title').prepend(enName.replace(/\s+hotline\s*$/i, '') + ' ');
+      }
+    }
+
     $('opBody').innerHTML = DATA.operators.length ? DATA.operators.map(function (op) {
       var names = Array.isArray(op.names) ? op.names.join(', ') : op.names;
       var langs = Array.isArray(op.languages) ? op.languages.join(', ') : op.languages;
@@ -443,7 +450,7 @@
         '<td>' + escapeHtml(c.name) + '</td>' +
         '<td>' + (parseInt(c.pause, 10) || 0) + '</td>' +
         '<td>' + (c.sequence ? escapeHtml(c.sequence) : '<span style="color:#999">(allow only)</span>') + '</td>' +
-        '<td>' + (c.skipmenu ? (c.skipmenu === true ? '<input type="checkbox" value="true" checked disabled>' : '<span style="color:#999">' + c.skipmenu + '</span>') : '<input type="checkbox" disabled>') + '</td>' +
+        '<td><span style="color:#999">' + (c.skipmenu ? ((c.skipmenu === true && DATA.languages.length) ? DATA.languages[0] : c.skipmenu) : '<input type="checkbox" disabled>') + '</span></td>' +
         '<td style="white-space:nowrap">' +
         '<button class="sec" onclick="editSeq(' + i + ')">Edit</button> ' +
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
@@ -866,7 +873,7 @@
       '<td><input id="eSeqName" value="' + escapeHtml(c.name) + '" style="width:100%"></td>' +
       '<td><input id="eSeqPause" type="number" min="0" step="1" value="' + (parseInt(c.pause, 10) || 0) + '" style="width:100%"></td>' +
       '<td><input id="eSeqSeq" value="' + escapeHtml(c.sequence) + '" style="width:100%"></td>' +
-      '<td>' + (!!c.skipmenu ? '<select id="eSeqMenu"><option value="true"' + (c.skipmenu === true ? ' selected' : '') + '>Any language</option>' + DATA.languages.map(function (l, i) { return '<option value="' + l + '"' + (c.skipmenu === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '<option value="false">Don\'t skip menu</option></select>' : '<input id="eSeqMenu" type="checkbox" value="true">') + '</td>' +
+      '<td><select id="eSeqMenu">' + DATA.languages.map(function (l, i) { return '<option value="' + l + '"' + ((c.skipmenu === l || (c.skipmenu === true && DATA.languages.length && l === DATA.languages[0])) ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '<option value="false"' + (!c.skipmenu ? ' selected' : '') + '>Don\'t skip menu</option></select></td>' +
       '<td style="white-space:nowrap">' +
       '<button onclick="saveSeq(' + i + ')">Save</button> ' +
       '<button class="sec" onclick="render()">Cancel</button></td>';
