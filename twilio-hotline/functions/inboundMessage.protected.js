@@ -80,7 +80,7 @@ exports.handler = async function (context, event, callback) {
     dateSentAfter: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) });
   recentRecipients = [...new Set(recentOutboundMessages.map(m => m.to))];
   if (!recentRecipients.includes(hotlineNumberWithProtocol)) {
-    const autoresponderMessage = context.AUTORESPONDER_MESSAGE || '';
+    const autoresponderMessage = context.AUTORESPONDER_MESSAGE.trim() || false;
     if (autoresponderMessage) {
       await twilioClient.messages.create({
         from: hotlineNumberWithProtocol,
