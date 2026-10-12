@@ -5,9 +5,8 @@ exports.handler = function (context, event, callback) {
   const twiml = new Twilio.twiml.VoiceResponse();
   
   const languages = (context.LANGUAGES || 'es,en').split(',');
-  const callerLanguage = event.language || languages[0] || 'en';
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
-  const localizedName = hotlineName[languages.indexOf(callerLanguage)] || messagesMap[callerLanguage].name;
+  const localizedName = hotlineName[languages.indexOf(event.language)] || messagesMap[event.language].name;
 
   // Identify callers from a known number
   let connectionSequences = [];
@@ -23,15 +22,15 @@ exports.handler = function (context, event, callback) {
     });
     sayLangMap(
       gather, 
-      callerLanguage, 
-      messagesMap[callerLanguage].operator.precall.intro.replace('{name}', (callerSequence ? callerSequence.name + ' via ' : '') + localizedName), 
+      event.language, 
+      messagesMap[event.language].operator.precall.intro.replace('{name}', (callerSequence ? callerSequence.name + ' via ' : '') + localizedName), 
       event.callerFrom
     );
     // By default, if no gather response happens within the timeout, reject the reservation.
     sayLangMap(
       twiml,
-      callerLanguage,
-      messagesMap[callerLanguage].operator.precall.noResponse,
+      event.language,
+      messagesMap[event.language].operator.precall.noResponse,
       event.callerFrom
     );
     twiml.redirect("/queue/rejectReservation?taskSid=" + event.taskSid + "&reservationSid=" + event.reservationSid);
@@ -45,7 +44,7 @@ exports.handler = function (context, event, callback) {
       "taskSid=" + event.taskSid +
       "&reservationSid=" + event.reservationSid +
       "&callerFrom=" + encodeURIComponent(event.callerFrom) +
-      "&language=" + callerLanguage);
+      "&language=" + event.language);
   }
 
   return callback(null, twiml);

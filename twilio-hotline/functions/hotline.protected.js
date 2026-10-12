@@ -46,7 +46,7 @@ exports.handler = async function (context, event, callback) {
     }
   }
 
-  if (!event.Digits || skipMenu) {
+  if (!event.Digits) {
     // Update the workers first. Worker sync is a best-effort refresh, never a
     // gate on the call: if it throws, TaskRouter still holds the roster from the
     // last successful sync, so answer the caller and let the error surface in the
@@ -58,7 +58,10 @@ exports.handler = async function (context, event, callback) {
     }
   }
 
-  if (!event.Digits && languages.length > 1 && !skipMenu) {
+  if (!skipMenu && languages.length > 1 && !event.Digits) {
+    // If the caller hasn't entered a digit yet, the hotline supports more than one language,
+    // and the caller's number isn't configured to skip the language menu: 
+    // play the language selection menu and gather a digit.
     const gather = twiml.gather({ numDigits: 1 });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
@@ -77,8 +80,11 @@ exports.handler = async function (context, event, callback) {
     // If no response happens within the gather timeout, say goodbye in the default language and hang up:
     twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
-  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1 || skipMenu) {
-    var key = (skipMenu && callerSequence.skipmenu !== true) ? callerSequence.skipmenu : languages[0];
+  } else if (skipMenu || languages.length == 1 || (0 < event.Digits && event.Digits <= languages.length)) {
+    // If the caller has entered a valid digit, or if the hotline only supports one language, 
+    // or if the caller's number is configured to skip the language menu:
+    // enqueue the call with the default language or the language configured for the caller's number.
+    var key = (skipMenu && context.LANGUAGES.search(callerSequence.skipmenu) !== -1) ? callerSequence.skipmenu : languages[0];
     if (languages.length == 1) {
       // No language selection needed if there is just one language!
       twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
@@ -96,7 +102,13 @@ exports.handler = async function (context, event, callback) {
       action: '/record?language=' + key + '&callerFrom=' + encodeURIComponent(event.From),
     }).task({}, JSON.stringify({ language: key }));
     twiml.hangup();
+  } else if (event.Digits) {
+    // If the caller has entered an invalid digit, send them back to the language selection menu
+    twiml.redirect('/hotline');
+    twiml.hangup();
   } else {
+    // If the caller has not entered a digit and the hotline supports more than one language,
+    // say goodbye in the default language and hang up after the gather times out.
     twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
   }
