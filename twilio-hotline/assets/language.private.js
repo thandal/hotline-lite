@@ -89,7 +89,14 @@ const messagesMap = {
           rescinded: "Another operator answered this call.",
           canceled: "The caller hung up.",
           default: "Someone else answered or the caller hung up.",
-        }
+        },
+        outbound: {
+          option: "Press {number} to make an outbound call.",
+          prompt: "Enter the number to call, then press the pound key.",
+          confirmation: "You entered {number}. Press 1 to confirm, or 2 to re-enter the number.",
+          invalid: "You entered an invalid number. Please try again.",
+          calling: "Calling {number}.",
+        },
       },
       postcall: {
         options: "Call finished. Press 1 to repeat the caller's number. Press 2 to add the caller to the blocklist. Press 3 to call the caller back.",
@@ -123,7 +130,14 @@ const messagesMap = {
           rescinded: "Otre operador respondió a esta llamada.",
           canceled: "La persona en espera terminó la llamada.",
           default: "La llamada se finalizó.",
-        }
+        },
+        outbound: {
+          option: "Presione {number} para hacer una llamada.",
+          prompt: "Marque el número que quiere llamar.",
+          confirmation: "Ingresó {number}. Presione 1 para confirmar, o 2 para volver a ingresar el número.",
+          invalid: "El número que marcó no es válido. Por favor, inténtelo de nuevo.",
+          calling: "Llamando {number}.",
+        },
       },
       postcall: {
         options: "Llamada finalizada. Presione 1 para escuchar el número de nuevo. Presione 2 para bloquearlo. Presione 3 para marcarlo de nuevo.",

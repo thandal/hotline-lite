@@ -1,5 +1,6 @@
 exports.handler = async function (context, event, callback) {
   console.log("CLEARING LOGS");
+  const { getWorkerNumbers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   const twilioClient = context.getTwilioClient();
 
   const horizon = (days) => {
@@ -16,10 +17,16 @@ exports.handler = async function (context, event, callback) {
   // Only clear calls that ended a while ago. recordingStatusCallback fires at
   // the same moment as this one, and it needs the recording to still be there
   // while it downloads the voice memo and hands it to Signal.
+  const workerNumbers = getWorkerNumbers(context);
   const calls = await twilioClient.calls.list({ limit: 20, endTimeBefore: horizon(1/24) }); // Select calls that ended more than an hour ago
   await Promise.all(calls.map(async (c) => {
-    await removeRecordings(c);
-    await twilioClient.calls(c.sid).remove();
+    if (c.endTime < horizon(28) || ( !workerNumbers.includes(c.from) || (c.from == context.HOTLINE_NUMBER && workerNumbers.includes(c.to)))) {
+      // If an inbound call was from an operator, 
+      // or the hotline number made an outbound call to a non-operator, 
+      // we want to hold onto the logs a bit longer.
+      await removeRecordings(c);
+      await twilioClient.calls(c.sid).remove();
+    }
   })).catch(function () {
     console.log("Clearing Call Log Promise Rejected");
   });

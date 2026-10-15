@@ -1,7 +1,7 @@
 
 exports.handler = async function (context, event, callback) {
   const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
-  const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
+  const { updateWorkers, isOperator } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   // LANGUAGES is dashboard-managed and may be unset on a fresh install (before an
   // admin configures one) or cleared to empty; fall back to a default so the
   // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
@@ -51,7 +51,7 @@ exports.handler = async function (context, event, callback) {
     // last successful sync, so answer the caller and let the error surface in the
     // logs rather than dropping them.
     try {
-      await updateWorkers(context);
+      const isOperator = await updateWorkers(context, event);
     } catch (e) {
       console.error('update_workers_failed ' + (e.message || e));
     }
@@ -68,16 +68,26 @@ exports.handler = async function (context, event, callback) {
         );
         gather.pause({ length: 1 });
       }
+      if (isOperator) {
+        sayLangMap(
+          gather, 
+          languages[0], 
+          messagesMap[languages[0]].operator.outbound.option.replace('{number}', languages.length + 1),
+        );
+      }
       gather.pause({ length: 1 });
     }
     // If no response happens within the gather timeout, say goodbye in the default language and hang up:
     twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
-  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1) {
+  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1 || (isOperator && event.Digits == languages.length + 1)) {
     var key = languages[0];
     if (languages.length == 1) {
       // No language selection needed if there is just one language!
       twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
+    } else if (isOperator && event.Digits == languages.length + 1) {
+      twiml.redirect('/outbound?language=' + languages[0] + '&callerFrom=' + encodeURIComponent(event.From));
+      console.log("Caller selected outbound call option");
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed
