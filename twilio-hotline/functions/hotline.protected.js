@@ -18,6 +18,10 @@ exports.handler = async function (context, event, callback) {
   if (!Array.isArray(connectionSequences)) connectionSequences = [];
   const allowlistOnly = context.ALLOWLIST_ONLY === 'true';
   const callerSequence = connectionSequences.find(s => s && s.number === event.From);
+  // An entry may set a language, which skips the language menu for that number.
+  // Ignore it once that language is no longer offered; the caller gets the menu.
+  const presetLanguage = callerSequence && languages.includes(callerSequence.language)
+    ? callerSequence.language : null;
 
   // BLOCKLIST may be unset (it isn't pre-provisioned), empty, or the 'null'
   // sentinel admin writes for an empty list — guard the split so a missing var
@@ -45,7 +49,7 @@ exports.handler = async function (context, event, callback) {
     }
   }
 
-  if (!event.Digits && languages.length > 1) {
+  if (!event.Digits) {
     // Update the workers first. Worker sync is a best-effort refresh, never a
     // gate on the call: if it throws, TaskRouter still holds the roster from the
     // last successful sync, so answer the caller and let the error surface in the
@@ -55,6 +59,9 @@ exports.handler = async function (context, event, callback) {
     } catch (e) {
       console.error('update_workers_failed ' + (e.message || e));
     }
+  }
+
+  const playMenu = function () {
     const gather = twiml.gather({ numDigits: 1 });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
@@ -73,16 +80,21 @@ exports.handler = async function (context, event, callback) {
     // If no response happens within the gather timeout, say goodbye in the default language and hang up:
     twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
     twiml.hangup();
-  } else if ((0 < event.Digits && event.Digits <= languages.length) || languages.length == 1) {
-    var key = languages[0];
-    if (languages.length == 1) {
-      // No language selection needed if there is just one language!
-      twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[0]));
+  };
+
+  if (!event.Digits && languages.length > 1 && !presetLanguage) {
+    playMenu();
+  } else if (presetLanguage || languages.length == 1 || (0 < event.Digits && event.Digits <= languages.length)) {
+    var key = presetLanguage || languages[0];
+    if (presetLanguage || languages.length == 1) {
+      // No menu, so this is the caller's only greeting.
+      twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[languages.indexOf(key)]));
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed
       console.log("Caller selected language:", key);
     }
+    // The entry's name goes on the task so preCall can announce it to the operator.
     twiml.enqueue({
       workflowSid: context.WORKFLOW_SID,
       // Have to pass the language as a parameter because the Task
@@ -90,11 +102,13 @@ exports.handler = async function (context, event, callback) {
       waitUrl: '/queue/wait?language=' + key,
       // Maybe record a message, depending on the QueueResult
       action: '/record?language=' + key + '&callerFrom=' + encodeURIComponent(event.From),
-    }).task({}, JSON.stringify({ language: key }));
+    }).task({}, JSON.stringify({ language: key, callerName: (callerSequence && callerSequence.name) || '' }));
     twiml.hangup();
   } else {
-    twiml.say(sayAttrs(languages[0]), messagesMap[languages[0]].caller.welcome.goodbye);
-    twiml.hangup();
+    // A key that matches no language: play the menu again. Replay it here
+    // rather than redirecting to /hotline, which would take the call for a new
+    // one and send a gateway's key sequence into the live call a second time.
+    playMenu();
   }
   return callback(null, twiml);
 };

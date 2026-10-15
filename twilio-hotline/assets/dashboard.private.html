@@ -166,6 +166,8 @@
     Sequences may contain digits, <code>*</code>, <code>#</code>, <code>w</code>
     (a 0.5&nbsp;s pause), and <code>W</code> (a 1&nbsp;s pause).
     Leave the key sequence blank to simply allow a number (no gateway) &mdash; useful with the allow-list option below.
+    Optionally give a number a name, which the operator hears before accepting the call,
+    and a language, which skips the language menu for calls from that number.
   </p>
   <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px">
     <input type="checkbox" id="allowlistOnly" onchange="saveAllowlistOnly(this)">
@@ -173,16 +175,20 @@
   </label>
   <div class="row">
     <input id="sNum" placeholder="+12025551234">
+    <input id="sName" placeholder="Name (optional)" maxlength="40">
     <input id="sPause" type="number" min="0" step="1" style="max-width:90px" placeholder="Pause (s)">
     <input id="sSeq" placeholder="Keys, e.g. 1w# (blank = allow only)" pattern="[0-9*#wW]*">
+    <select id="sLang"></select>
     <button onclick="addSeq()">Add</button>
   </div>
   <table>
     <thead>
       <tr>
         <th>Number</th>
+        <th>Name</th>
         <th>Pause (s)</th>
         <th>Key Sequence</th>
+        <th>Language</th>
         <th></th>
       </tr>
     </thead>
@@ -446,14 +452,20 @@
 
     var seqs = DATA.connectionSequences || [];
     $('seqBody').innerHTML = seqs.length ? seqs.map(function (c, i) {
+      var lang = !c.language ? '<span style="color:#999">(menu)</span>'
+        : DATA.languages.indexOf(c.language) >= 0 ? escapeHtml(c.language)
+        : escapeHtml(c.language) + ' <span style="color:#999">(not offered, so the menu plays)</span>';
       return '<tr id="seqrow-' + i + '">' +
         '<td>' + escapeHtml(c.number) + '</td>' +
+        '<td>' + escapeHtml(c.name) + '</td>' +
         '<td>' + (parseInt(c.pause, 10) || 0) + '</td>' +
         '<td>' + (c.sequence ? escapeHtml(c.sequence) : '<span style="color:#999">(allow only)</span>') + '</td>' +
+        '<td>' + lang + '</td>' +
         '<td style="white-space:nowrap">' +
         '<button class="sec" onclick="editSeq(' + i + ')">Edit</button> ' +
         '<button class="del" onclick="removeSeq(' + i + ')">Delete</button></td></tr>';
-    }).join('') : '<tr><td colspan="4" style="color:#999">None</td></tr>';
+    }).join('') : '<tr><td colspan="6" style="color:#999">None</td></tr>';
+    $('sLang').innerHTML = seqLanguageOptions($('sLang').value);
     if ($('allowlistOnly')) $('allowlistOnly').checked = !!DATA.allowlistOnly;
     if ($('icsUrl')) $('icsUrl').value = DATA.icsUrl || '';
 
@@ -830,17 +842,36 @@
   // --- Special Call Handling ---------------------------------------------
   var SEQ_RE = /^[0-9*#wW]*$/;  // empty allowed: a blank sequence = allow-list-only entry
 
-  // Validate the three inputs of an add/edit row; returns a normalized
-  // {number, pause, sequence} or null (after surfacing the error) on bad input.
-  function readSeqInputs(numId, pauseId, seqId) {
+  // Options for an entry's language picker: the menu (no language), then each
+  // offered language. A language that is no longer offered stays listed and
+  // selected, so editing something else in the entry doesn't silently drop it.
+  function seqLanguageOptions(selected) {
+    var langs = DATA.languages.slice();
+    if (selected && langs.indexOf(selected) === -1) langs.push(selected);
+    return '<option value="">Language menu</option>' + langs.map(function (l) {
+      var label = DATA.languages.indexOf(l) >= 0 ? l : l + ' (not offered)';
+      return '<option value="' + escapeHtml(l) + '"' + (l === selected ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+    }).join('');
+  }
+
+  // Validate the inputs of an add/edit row; returns a normalized
+  // {number, pause, sequence, name?, language?} or null (after surfacing the
+  // error) on bad input.
+  function readSeqInputs(numId, nameId, pauseId, seqId, langId) {
     var num = $(numId).value.trim();
+    var name = $(nameId).value.trim();
     var pause = parseInt($(pauseId).value, 10);
     var seq = $(seqId).value.trim();
+    var lang = $(langId).value;
     if (!/^\+\d{7,15}$/.test(num)) { showError('Enter a valid E.164 number'); return null; }
     if (!SEQ_RE.test(seq)) { showError('Key sequence may contain only digits, *, #, and w'); return null; }
+    if (name.length > 40) { showError('Name may be at most 40 characters'); return null; }
     if (isNaN(pause) || pause < 0) pause = 0;
     if (pause > 60) pause = 60;
-    return { number: num, pause: pause, sequence: seq };
+    var item = { number: num, pause: pause, sequence: seq };
+    if (name) item.name = name;
+    if (lang) item.language = lang;
+    return item;
   }
 
   function saveSequences(next, label, after) {
@@ -851,11 +882,11 @@
   }
 
   window.addSeq = function () {
-    var item = readSeqInputs('sNum', 'sPause', 'sSeq');
+    var item = readSeqInputs('sNum', 'sName', 'sPause', 'sSeq', 'sLang');
     if (!item) return;
     var next = (DATA.connectionSequences || []).concat([item]);
     saveSequences(next, 'Add call handling', function () {
-      $('sNum').value = ''; $('sSeq').value = ''; $('sPause').value = '';
+      $('sNum').value = ''; $('sName').value = ''; $('sSeq').value = ''; $('sPause').value = ''; $('sLang').value = '';
     });
   };
 
@@ -865,15 +896,17 @@
     var row = $('seqrow-' + i);
     row.innerHTML =
       '<td><input id="eSeqNum" value="' + escapeHtml(c.number) + '" style="width:100%"></td>' +
+      '<td><input id="eSeqName" value="' + escapeHtml(c.name) + '" maxlength="40" style="width:100%"></td>' +
       '<td><input id="eSeqPause" type="number" min="0" step="1" value="' + (parseInt(c.pause, 10) || 0) + '" style="width:100%"></td>' +
       '<td><input id="eSeqSeq" value="' + escapeHtml(c.sequence) + '" style="width:100%"></td>' +
+      '<td><select id="eSeqLang">' + seqLanguageOptions(c.language) + '</select></td>' +
       '<td style="white-space:nowrap">' +
       '<button onclick="saveSeq(' + i + ')">Save</button> ' +
       '<button class="sec" onclick="render()">Cancel</button></td>';
   };
 
   window.saveSeq = function (i) {
-    var item = readSeqInputs('eSeqNum', 'eSeqPause', 'eSeqSeq');
+    var item = readSeqInputs('eSeqNum', 'eSeqName', 'eSeqPause', 'eSeqSeq', 'eSeqLang');
     if (!item) return;
     var next = (DATA.connectionSequences || []).map(function (c, j) { return j === i ? item : c; });
     saveSequences(next, 'Update call handling');
