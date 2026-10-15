@@ -112,7 +112,7 @@
   }
 </style>
 
-<h1 id="title">Hotline Admin <button class="sec" onclick="logout()" style="float:right">Log Out</button></h1>
+<h1 id="title"><span id="titleName"></span>Hotline Admin <button class="sec" onclick="logout()" style="float:right">Log Out</button></h1>
 <div id="msg" class="msg hide"></div>
 
 <div class="card">
@@ -413,12 +413,12 @@
   }
 
   function render() {
-    if (DATA.hotlineName && DATA.languages.indexOf('en') !== -1) {
-      var enName = DATA.hotlineName[DATA.languages.indexOf('en')];
-      if ($('title').innerHTML.indexOf(enName) === -1) {
-        $('title').prepend(enName.replace(/\s+hotline\s*$/i, '') + ' ');
-      }
-    }
+    // Lead the page title with the hotline's English name, if it has one, minus
+    // a trailing "hotline" (the title already says it). Set rather than
+    // prepended, so a renamed hotline replaces the old name.
+    var enName = ((DATA.hotlineName || [])[DATA.languages.indexOf('en')] || '').trim();
+    var titleName = enName.replace(/\s*\bhotline$/i, '');
+    $('titleName').textContent = titleName ? titleName + ' ' : '';
 
     $('opBody').innerHTML = DATA.operators.length ? DATA.operators.map(function (op) {
       var names = Array.isArray(op.names) ? op.names.join(', ') : op.names;
