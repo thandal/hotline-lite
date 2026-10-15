@@ -53,7 +53,7 @@ exports.handler = async function (context, event, callback) {
     }
     if (event.password !== context.ADMIN_PASSWORD) {
       resp.setStatusCode(401);
-      resp.setBody({ warning: 'Invalid password' });
+      resp.setBody({ error: 'Invalid password' });
       return callback(null, resp);
     }
     const salt = crypto.randomBytes(16).toString('hex');
@@ -65,7 +65,7 @@ exports.handler = async function (context, event, callback) {
   if (!event.token || !event.salt ||
       !crypto.timingSafeEqual(Buffer.from(event.token), Buffer.from(token(context, event.salt)))) {
     resp.setStatusCode(401);
-    resp.setBody({ warning: 'Unauthorized' });
+    resp.setBody({ error: 'Unauthorized' });
     return callback(null, resp);
   }
 
