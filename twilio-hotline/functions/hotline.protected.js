@@ -63,7 +63,7 @@ exports.handler = async function (context, event, callback) {
 
   const playMenu = function () {
     // Post the digit to /hotline itself rather than to "the current URL": when
-    // /queue/wait sends a caller back here as /hotline?Digits=0, the current
+    // /noOperators sends a caller back here as /hotline?Digits=0, the current
     // URL would carry that stale digit along with the new one.
     const gather = twiml.gather({ numDigits: 1, action: '/hotline' });
     // Say the initial greeting in each language, twice
@@ -86,8 +86,9 @@ exports.handler = async function (context, event, callback) {
   };
 
   // A preset language only applies to the first request. Digits mean the
-  // caller has been through the menu (or asked for it by pressing 0 on hold,
-  // see /queue/wait), and then their choice wins over the preset.
+  // caller has been through the menu (or asked for it by pressing 0 on the
+  // no-operators prompt, see /noOperators), and then their choice wins over
+  // the preset.
   const skipMenu = (presetLanguage && !event.Digits) || languages.length == 1;
   if (!event.Digits && !skipMenu) {
     playMenu();
@@ -102,26 +103,28 @@ exports.handler = async function (context, event, callback) {
       key = languages[event.Digits - 1];  // zero-indexed
       console.log("Caller selected language:", key);
     }
-    // The call is queued even when nobody on call speaks the language, so an
-    // operator who comes on call can still take it; the flag only changes the
-    // hold message so the caller isn't left waiting for no one.
-    const hasOperator = await languageHasOperator(context, key);
-    if (!hasOperator) console.log("No on-call operator speaks", key);
+    // Don't queue a call nobody can take: when no on-call operator speaks the
+    // language, tell the caller and offer a message or the menu instead.
+    if (!(await languageHasOperator(context, key))) {
+      console.log("No on-call operator speaks", key);
+      twiml.redirect('/noOperators?language=' + key + '&callerFrom=' + encodeURIComponent(event.From));
+      return callback(null, twiml);
+    }
     // The entry's name goes on the task so preCall can announce it to the operator.
     twiml.enqueue({
       workflowSid: context.WORKFLOW_SID,
       // Have to pass the language as a parameter because the Task
       // attributes aren't passed along to the wait callback... UGH!
-      waitUrl: '/queue/wait?language=' + key + (hasOperator ? '' : '&noOperators=1'),
+      waitUrl: '/queue/wait?language=' + key,
       // Maybe record a message, depending on the QueueResult
       action: '/record?language=' + key + '&callerFrom=' + encodeURIComponent(event.From),
     }).task({}, JSON.stringify({ language: key, callerName: (callerSequence && callerSequence.name) || '' }));
     twiml.hangup();
   } else {
-    // A key that matches no language, or the 0 that /queue/wait relays when a
-    // caller on hold asks for another language: play the menu again. Replay it
-    // here rather than redirecting to /hotline, which would take the call for a
-    // new one and send a gateway's key sequence into the live call a second time.
+    // A key that matches no language, or the 0 that /noOperators relays when a
+    // caller asks for another language: play the menu again. Replay it here
+    // rather than redirecting to /hotline, which would take the call for a new
+    // one and send a gateway's key sequence into the live call a second time.
     playMenu();
   }
   return callback(null, twiml);
