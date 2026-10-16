@@ -1,7 +1,7 @@
 
 exports.handler = async function (context, event, callback) {
   const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
-  const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
+  const { updateWorkers, languageHasOperator } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   // LANGUAGES is dashboard-managed and may be unset on a fresh install (before an
   // admin configures one) or cleared to empty; fall back to a default so the
   // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
@@ -62,7 +62,10 @@ exports.handler = async function (context, event, callback) {
   }
 
   const playMenu = function () {
-    const gather = twiml.gather({ numDigits: 1 });
+    // Post the digit to /hotline itself rather than to "the current URL": when
+    // /noOperators sends a caller back here as /hotline?Digits=0, the current
+    // URL would carry that stale digit along with the new one.
+    const gather = twiml.gather({ numDigits: 1, action: '/hotline' });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
@@ -82,17 +85,30 @@ exports.handler = async function (context, event, callback) {
     twiml.hangup();
   };
 
-  if (!event.Digits && languages.length > 1 && !presetLanguage) {
+  // A preset language only applies to the first request. Digits mean the
+  // caller has been through the menu (or asked for it by pressing 0 on the
+  // no-operators prompt, see /noOperators), and then their choice wins over
+  // the preset.
+  const skipMenu = (presetLanguage && !event.Digits) || languages.length == 1;
+  if (!event.Digits && !skipMenu) {
     playMenu();
-  } else if (presetLanguage || languages.length == 1 || (0 < event.Digits && event.Digits <= languages.length)) {
-    var key = presetLanguage || languages[0];
-    if (presetLanguage || languages.length == 1) {
+  } else if (skipMenu || (0 < event.Digits && event.Digits <= languages.length)) {
+    let key;
+    if (skipMenu) {
+      key = presetLanguage || languages[0];
       // No menu, so this is the caller's only greeting.
       twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[languages.indexOf(key)]));
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed
       console.log("Caller selected language:", key);
+    }
+    // Don't queue a call nobody can take: when no on-call operator speaks the
+    // language, tell the caller and offer a message or the menu instead.
+    if (!(await languageHasOperator(context, key))) {
+      console.log("No on-call operator speaks", key);
+      twiml.redirect('/noOperators?language=' + key + '&callerFrom=' + encodeURIComponent(event.From));
+      return callback(null, twiml);
     }
     // The entry's name goes on the task so preCall can announce it to the operator.
     twiml.enqueue({
@@ -105,7 +121,8 @@ exports.handler = async function (context, event, callback) {
     }).task({}, JSON.stringify({ language: key, callerName: (callerSequence && callerSequence.name) || '' }));
     twiml.hangup();
   } else {
-    // A key that matches no language: play the menu again. Replay it here
+    // A key that matches no language, or the 0 that /noOperators relays when a
+    // caller asks for another language: play the menu again. Replay it here
     // rather than redirecting to /hotline, which would take the call for a new
     // one and send a gateway's key sequence into the live call a second time.
     playMenu();
