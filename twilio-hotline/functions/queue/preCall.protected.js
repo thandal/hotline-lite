@@ -7,6 +7,13 @@ exports.handler = function (context, event, callback) {
   const languages = (context.LANGUAGES || 'es,en').split(',');
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
   const localizedName = hotlineName[languages.indexOf(event.language)] || messagesMap[event.language].name;
+  // Callers with a named entry in Special Call Handling are announced by that
+  // name (see assignment.protected.js). Fill {name} first so a caller name
+  // that happens to contain "{name}" is read as typed.
+  const precall = messagesMap[event.language].operator.precall;
+  const intro = event.callerName
+    ? precall.introNamed.replace('{name}', localizedName).replace('{caller}', event.callerName)
+    : precall.intro.replace('{name}', localizedName);
 
   if (!event.Digits) {
     const gather = twiml.gather({
@@ -16,7 +23,7 @@ exports.handler = function (context, event, callback) {
     sayLangMap(
       gather, 
       event.language, 
-      messagesMap[event.language].operator.precall.intro.replace('{name}', localizedName), 
+      intro,
       event.callerFrom
     );
     // By default, if no gather response happens within the timeout, reject the reservation.

@@ -18,7 +18,8 @@ exports.handler = function (context, event, callback) {
       "taskSid=" + event.TaskSid +
       "&reservationSid=" + event.ReservationSid +
       "&callerFrom=" + encodeURIComponent(taskAttributes.from) +
-      "&language=" + taskAttributes.language,
+      "&language=" + taskAttributes.language +
+      (taskAttributes.callerName ? "&callerName=" + encodeURIComponent(taskAttributes.callerName) : ""),
     // NOTE: by default, status_callback_url is only called when the *worker's* call *completes*.
     // To get updates on other events (like initiated, ringing, answered), we need to specify status_callback_event.
     // "status_callback_event": ["initiated", "ringing", "answered", "completed"],

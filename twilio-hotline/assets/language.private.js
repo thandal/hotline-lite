@@ -84,6 +84,7 @@ const messagesMap = {
     operator: {
       precall: {
         intro: "This is a call from {name}. Press any key to accept the call.",
+        introNamed: "This is a call from {caller}, through {name}. Press any key to accept the call.",
         noResponse: "You didn't respond, so we're moving on to another operator. This call was from {number}.",
         reservationStatus: {
           rescinded: "Another operator answered this call.",
@@ -118,6 +119,7 @@ const messagesMap = {
     operator: {
       precall: {
         intro: "Esta es una llamada de {name}. Presione cualquier tecla para aceptar la llamada.",
+        introNamed: "Esta es una llamada de {caller}, a través de {name}. Presione cualquier tecla para aceptar la llamada.",
         noResponse: "No respondió, así que pasamos a otro operador. Esta llamada era de {number}.",
         reservationStatus: {
           rescinded: "Otre operador respondió a esta llamada.",

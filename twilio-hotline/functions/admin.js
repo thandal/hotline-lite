@@ -205,15 +205,22 @@ exports.handler = async function (context, event, callback) {
 
     } else if (event.action === 'update-connection-sequences') {
       // Special call handling: a single CONNECTION_SEQUENCES var holds the whole
-      // list as JSON [{number, pause, sequence}, ...]. The dashboard edits the
-      // array client-side and posts the full replacement (like blocklist/languages).
+      // list as JSON [{number, pause, sequence, name?, language?}, ...]. The
+      // dashboard edits the array client-side and posts the full replacement
+      // (like blocklist/languages). name is announced to the operator; language
+      // skips the menu. Both are stored only when set, to keep the var short.
       const E164 = /^\+\d{7,15}$/;
       const SEQ = /^[0-9*#wW]*$/;  // DTMF digits plus 'w' (0.5s wait) — see <Play digits>; empty = allow-list-only entry
+      // A language code, not checked against LANGUAGES: an entry may keep a
+      // language that was since removed, which hotline.protected.js ignores.
+      const LANG = /^[a-z-]{2,10}$/;
       const raw = Array.isArray(event.sequences) ? event.sequences : [];
       const clean = [];
       for (const item of raw) {
         const number = ((item && item.number) || '').toString().trim();
         const sequence = ((item && item.sequence) || '').toString().trim();
+        const name = ((item && item.name) || '').toString().trim();
+        const language = ((item && item.language) || '').toString().trim();
         let pause = parseInt(item && item.pause, 10);
         if (!Number.isFinite(pause) || pause < 0) pause = 0;
         if (pause > 60) pause = 60;
@@ -222,7 +229,15 @@ exports.handler = async function (context, event, callback) {
           resp.setBody({ error: 'Each entry needs a valid E.164 number; the optional key sequence may contain only digits, *, #, or w' });
           return callback(null, resp);
         }
-        clean.push({ number, pause, sequence });
+        if (name.length > 40 || (language && !LANG.test(language))) {
+          resp.setStatusCode(400);
+          resp.setBody({ error: 'The optional name may be at most 40 characters, and the optional language must be a language code' });
+          return callback(null, resp);
+        }
+        const entry = { number, pause, sequence };
+        if (name) entry.name = name;
+        if (language) entry.language = language;
+        clean.push(entry);
       }
       const value = JSON.stringify(clean);
       const v = vars.find(v => v.key === 'CONNECTION_SEQUENCES');
