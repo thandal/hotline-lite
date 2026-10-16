@@ -1,7 +1,7 @@
 
 exports.handler = async function (context, event, callback) {
   const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
-  const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
+  const { updateWorkers, languageHasOperator } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   // LANGUAGES is dashboard-managed and may be unset on a fresh install (before an
   // admin configures one) or cleared to empty; fall back to a default so the
   // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
@@ -62,7 +62,10 @@ exports.handler = async function (context, event, callback) {
   }
 
   const playMenu = function () {
-    const gather = twiml.gather({ numDigits: 1 });
+    // Post the digit to /hotline itself rather than to "the current URL": when
+    // /queue/wait sends a caller back here as /hotline?Digits=0, the current
+    // URL would carry that stale digit along with the new one.
+    const gather = twiml.gather({ numDigits: 1, action: '/hotline' });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
@@ -82,11 +85,16 @@ exports.handler = async function (context, event, callback) {
     twiml.hangup();
   };
 
-  if (!event.Digits && languages.length > 1 && !presetLanguage) {
+  // A preset language only applies to the first request. Digits mean the
+  // caller has been through the menu (or asked for it by pressing 0 on hold,
+  // see /queue/wait), and then their choice wins over the preset.
+  const skipMenu = (presetLanguage && !event.Digits) || languages.length == 1;
+  if (!event.Digits && !skipMenu) {
     playMenu();
-  } else if (presetLanguage || languages.length == 1 || (0 < event.Digits && event.Digits <= languages.length)) {
-    var key = presetLanguage || languages[0];
-    if (presetLanguage || languages.length == 1) {
+  } else if (skipMenu || (0 < event.Digits && event.Digits <= languages.length)) {
+    let key;
+    if (skipMenu) {
+      key = presetLanguage || languages[0];
       // No menu, so this is the caller's only greeting.
       twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[languages.indexOf(key)]));
     } else {
@@ -94,20 +102,26 @@ exports.handler = async function (context, event, callback) {
       key = languages[event.Digits - 1];  // zero-indexed
       console.log("Caller selected language:", key);
     }
+    // The call is queued even when nobody on call speaks the language, so an
+    // operator who comes on call can still take it; the flag only changes the
+    // hold message so the caller isn't left waiting for no one.
+    const hasOperator = await languageHasOperator(context, key);
+    if (!hasOperator) console.log("No on-call operator speaks", key);
     // The entry's name goes on the task so preCall can announce it to the operator.
     twiml.enqueue({
       workflowSid: context.WORKFLOW_SID,
       // Have to pass the language as a parameter because the Task
       // attributes aren't passed along to the wait callback... UGH!
-      waitUrl: '/queue/wait?language=' + key,
+      waitUrl: '/queue/wait?language=' + key + (hasOperator ? '' : '&noOperators=1'),
       // Maybe record a message, depending on the QueueResult
       action: '/record?language=' + key + '&callerFrom=' + encodeURIComponent(event.From),
     }).task({}, JSON.stringify({ language: key, callerName: (callerSequence && callerSequence.name) || '' }));
     twiml.hangup();
   } else {
-    // A key that matches no language: play the menu again. Replay it here
-    // rather than redirecting to /hotline, which would take the call for a new
-    // one and send a gateway's key sequence into the live call a second time.
+    // A key that matches no language, or the 0 that /queue/wait relays when a
+    // caller on hold asks for another language: play the menu again. Replay it
+    // here rather than redirecting to /hotline, which would take the call for a
+    // new one and send a gateway's key sequence into the live call a second time.
     playMenu();
   }
   return callback(null, twiml);

@@ -15,6 +15,13 @@ exports.handler = async function (context, event, callback) {
       finishOnKey: '*#',
       recordingStatusCallback: '/recordingStatusCallback?callerFrom=' + encodeURIComponent(event.callerFrom) + '&language=' + event.language,
     });
+  } else if (event.QueueResult == 'redirected') {
+    // /queue/wait pulled the call out of the queue with the REST API to send
+    // the caller back to the language menu. Twilio requests this URL when that
+    // happens but doesn't document whether the response runs; pointing it at
+    // the menu too means the caller gets there either way, never a hangup.
+    twiml.redirect('/hotline?Digits=0');
+    return callback(null, twiml);
   }
   twiml.hangup();
   return callback(null, twiml);

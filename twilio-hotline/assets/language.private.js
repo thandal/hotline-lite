@@ -76,6 +76,14 @@ const messagesMap = {
       wait: {
         connecting: "Someone will be with you shortly.",
         leaveAMessage: "Please remain on the line, or press 5 to leave a message.",
+        // Hold message when no on-call operator speaks the caller's language.
+        // The options depend on what the deployment offers (see /queue/wait).
+        noOperators: "Sorry, no English-speaking operators are available.",
+        noOperatorsOptions: {
+          messageOrLanguage: "Press 5 to leave a message, or press 0 to choose another language.",
+          message: "Press 5 to leave a message.",
+          language: "Press 0 to choose another language.",
+        },
       },
       record: {
         prompt: "Please leave a message after the tone.",
@@ -111,6 +119,12 @@ const messagesMap = {
       wait: {
         connecting: "Alguien estará con usted en breve.",
         leaveAMessage: "Por favor, permanezca en la línea o presione 5 para dejar un mensaje.",
+        noOperators: "Lo sentimos, no hay operadores disponibles que hablen español.",
+        noOperatorsOptions: {
+          messageOrLanguage: "Presione 5 para dejar un mensaje, o presione 0 para elegir otro idioma.",
+          message: "Presione 5 para dejar un mensaje.",
+          language: "Presione 0 para elegir otro idioma.",
+        },
       },
       record: {
         prompt: "Por favor, deje un mensaje después del tono.",
