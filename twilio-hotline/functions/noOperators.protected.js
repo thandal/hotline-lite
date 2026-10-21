@@ -11,32 +11,37 @@ exports.handler = function (context, event, callback) {
   const canChooseLanguage = languages.length > 1;
   const messages = messagesMap[event.language].caller;
   const callerFrom = encodeURIComponent(event.callerFrom);
+  const activeLanguages = encodeURIComponent(event.activeLanguages) || '';
 
-  if (event.Digits == 5 && canLeaveMessage) {
-    // /record is the queue's exit handler; leaveMessage=1 tells it the caller
+  if (event.Digits && event.Digits != 0 && canLeaveMessage) {
+    // /record is the queue's exit handler; noQueue=1 tells it the caller
     // asked for a message without having been queued.
-    twiml.redirect('/record?leaveMessage=1&language=' + event.language + '&callerFrom=' + callerFrom);
+    twiml.redirect('/record?noQueue=1&language=' + event.language + '&callerFrom=' + callerFrom);
   } else if (event.Digits == 0 && canChooseLanguage) {
     // Digits=0 makes /hotline replay the menu without its first-call steps
     // (gateway key sequence, roster sync).
-    twiml.redirect('/hotline?Digits=0');
+    twiml.redirect('/hotline?Digits=0&activeLanguages=' + activeLanguages);
   } else {
-    const options = canLeaveMessage && canChooseLanguage ? messages.noOperators.messageOrLanguage
-      : canLeaveMessage ? messages.noOperators.message
-      : canChooseLanguage ? messages.noOperators.language
+    const options = canLeaveMessage && canChooseLanguage ? messages.noOperator.options.messageOrLanguage
+      : canLeaveMessage ? messages.noOperator.options.message
+      : canChooseLanguage ? messages.noOperator.options.language
       : null;
     // Only gather when there is a key to press. The gather posts back here with
     // the language and caller intact.
     const target = options
-      ? twiml.gather({ numDigits: 1, action: '/noOperators?language=' + event.language + '&callerFrom=' + callerFrom })
+      ? twiml.gather({ numDigits: 1, action: '/noOperators?language=' + event.language + '&callerFrom=' + callerFrom + '&activeLanguages=' + activeLanguages })
       : twiml;
     for (let n = 0; n < 2; n++) {
-      target.say(sayAttrs(event.language), messages.noOperators.sorry);
+      target.say(sayAttrs(event.language), messages.noOperator.notice);
       if (options) target.say(sayAttrs(event.language), options);
       target.pause({ length: 1 });
     }
-    twiml.say(sayAttrs(event.language), messages.welcome.goodbye);
-    twiml.hangup();
+    if (canLeaveMessage) {
+      twiml.redirect('/record?noQueue=1&language=' + event.language + '&callerFrom=' + callerFrom);
+    } else {
+      twiml.say(sayAttrs(event.language), messages.welcome.goodbye);
+      twiml.hangup();
+    }
   }
   return callback(null, twiml);
 };

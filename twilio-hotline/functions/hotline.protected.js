@@ -55,7 +55,7 @@ exports.handler = async function (context, event, callback) {
     // last successful sync, so answer the caller and let the error surface in the
     // logs rather than dropping them.
     try {
-      await updateWorkers(context);
+      const activeLanguages = await updateWorkers(context);
     } catch (e) {
       console.error('update_workers_failed ' + (e.message || e));
     }
@@ -105,9 +105,9 @@ exports.handler = async function (context, event, callback) {
     }
     // Don't queue a call nobody can take: when no on-call operator speaks the
     // language, tell the caller and offer a message or the menu instead.
-    if (!(await languageHasOperator(context, key))) {
+    if (!activeLanguages.has(key)) {
       console.log("No on-call operator speaks", key);
-      twiml.redirect('/noOperators?language=' + key + '&callerFrom=' + encodeURIComponent(event.From));
+      twiml.redirect('/noOperators?language=' + key + '&callerFrom=' + encodeURIComponent(event.From) + '&activeLanguages=' + encodeURIComponent(Array.from(activeLanguages).join(',')));
       return callback(null, twiml);
     }
     // The entry's name goes on the task so preCall can announce it to the operator.

@@ -30,10 +30,10 @@ the admin dashboard (`/admin.html`) after deployment.
 # Operation
 
 ## Caller Experience
-When a Caller reaches the hotline, they will be greeted in various languages and asked to select their desired language by pressing a number.
+When a Caller reaches the hotline, they will be greeted in the hotline's languages and asked to select their desired language by pressing a number. 
 They will then be placed in a wait queue while the system finds an available operator.
-They will periodically hear updates while waiting.
-If no operator on call speaks the chosen language, the call is not queued: the caller is told so and can press 0 to return to the language menu or (when voice memos are set up) press 5 to leave a message.
+They will periodically hear updates while waiting. If voicemail is enabled, they will have the option to leave a message.
+If no operator on call speaks their chosen language, the caller is told so and given the option to leave a message (if voicemail is enabled) or select a second language.
 
 ## Operator Experience
 Operators (called Workers in the Twilio task scheduling system) will receive a call from the hotline number.

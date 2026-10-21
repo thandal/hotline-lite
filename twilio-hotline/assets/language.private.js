@@ -75,16 +75,15 @@ const messagesMap = {
       },
       wait: {
         connecting: "Someone will be with you shortly.",
-        leaveAMessage: "Please remain on the line, or press 5 to leave a message.",
-      },
-      // Played instead of queueing the call when no on-call operator speaks the
-      // caller's language. The options depend on what the deployment offers
-      // (see functions/noOperators.protected.js).
-      noOperators: {
-        sorry: "Sorry, no English-speaking operators are available.",
-        messageOrLanguage: "Press 5 to leave a message, or press 0 to choose another language.",
-        message: "Press 5 to leave a message.",
-        language: "Press 0 to choose another language.",
+        leaveAMessage: "Please remain on the line, or press any key to leave a message.",
+        noOperator: {
+          notice: "Sorry, no English-speaking operators are available.",
+          options: {
+            messageOrLanguage: "Press 0 to choose another language or press any other key to leave a message.",
+            message: "Stay on the line or press any key to leave a message.",
+            language: "Press 0 to choose another language.",
+          },
+        },
       },
       record: {
         prompt: "Please leave a message after the tone.",
@@ -119,13 +118,15 @@ const messagesMap = {
       },
       wait: {
         connecting: "Alguien estará con usted en breve.",
-        leaveAMessage: "Por favor, permanezca en la línea o presione 5 para dejar un mensaje.",
-      },
-      noOperators: {
-        sorry: "Lo sentimos, no hay operadores disponibles que hablen español.",
-        messageOrLanguage: "Presione 5 para dejar un mensaje, o presione 0 para elegir otro idioma.",
-        message: "Presione 5 para dejar un mensaje.",
-        language: "Presione 0 para elegir otro idioma.",
+        leaveAMessage: "Por favor, permanezca en la línea o presione cualquier tecla para dejar un mensaje.",
+        noOperator: {
+          notice: "Lo sentimos, no hay operadores disponibles que hablen español.",
+          options: {
+            messageOrLanguage: "Presione 0 para elegir otro idioma, o presione cualquier otra tecla para dejar un mensaje.",
+            message: "Permanezca en la línea o presione cualquier tecla para dejar un mensaje.",
+            language: "Presione 0 para elegir otro idioma.",
+          },
+        },
       },
       record: {
         prompt: "Por favor, deje un mensaje después del tono.",
