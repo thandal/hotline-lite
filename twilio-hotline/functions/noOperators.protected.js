@@ -9,7 +9,7 @@ exports.handler = function (context, event, callback) {
   const languages = (context.LANGUAGES || 'es,en').split(',');
   const canLeaveMessage = !!context.GROUP_KEY;
   const canChooseLanguage = languages.length > 1;
-  const messages = messagesMap[event.language].caller;
+  const messages = messagesMap[event.language].caller.wait;
   const callerFrom = encodeURIComponent(event.callerFrom);
   const activeLanguages = encodeURIComponent(event.activeLanguages) || '';
 

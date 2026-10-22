@@ -1,7 +1,7 @@
 
 exports.handler = async function (context, event, callback) {
   const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
-  const { updateWorkers, languageHasOperator } = require(Runtime.getAssets()['/updateWorkers.js'].path);
+  const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   // LANGUAGES is dashboard-managed and may be unset on a fresh install (before an
   // admin configures one) or cleared to empty; fall back to a default so the
   // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
@@ -49,13 +49,15 @@ exports.handler = async function (context, event, callback) {
     }
   }
 
+  let activeLanguages = event.activeLanguages ? new Set(event.activeLanguages.split(',') || '') : [];
+
   if (!event.Digits) {
     // Update the workers first. Worker sync is a best-effort refresh, never a
     // gate on the call: if it throws, TaskRouter still holds the roster from the
     // last successful sync, so answer the caller and let the error surface in the
     // logs rather than dropping them.
     try {
-      const activeLanguages = await updateWorkers(context);
+      activeLanguages = await updateWorkers(context);
     } catch (e) {
       console.error('update_workers_failed ' + (e.message || e));
     }
@@ -65,7 +67,8 @@ exports.handler = async function (context, event, callback) {
     // Post the digit to /hotline itself rather than to "the current URL": when
     // /noOperators sends a caller back here as /hotline?Digits=0, the current
     // URL would carry that stale digit along with the new one.
-    const gather = twiml.gather({ numDigits: 1, action: '/hotline' });
+    const gather_endpoint = activeLanguages ? '/hotline?activeLanguages=' + encodeURIComponent(Array.from(activeLanguages).join(',')) : '/hotline';
+    const gather = twiml.gather({ numDigits: 1, action: gather_endpoint });
     // Say the initial greeting in each language, twice
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
