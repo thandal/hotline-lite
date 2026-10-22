@@ -158,6 +158,8 @@ const updateWorkers = async function (context) {
 
   // Create the workers blindly, catch any errors
   const friendlyNamesNow = new Set();
+  // Note which languages have coverage
+  const languagesNow = new Set();
   for (let i = 0; i < Object.keys(operatorsOnCall).length; i++) {
     let workerExists = false;
     const operatorName = Object.keys(operatorsOnCall)[i];
@@ -194,6 +196,9 @@ const updateWorkers = async function (context) {
           attributes: JSON.stringify({ ...operatorsByName[operatorName], ...operatorsOnCall[operatorName] }),
         });
     }
+    for (let l of operatorsByName[operatorName].languages) {
+      languagesNow.add(l);
+    }
   }
 
   const workers = await client.taskrouter.v1.workspaces(context.WORKSPACE_SID).workers.list();
@@ -213,6 +218,9 @@ const updateWorkers = async function (context) {
     }
   }
   console.log("Done updating workers");
+
+  // Return a set of the languages with coverage now
+  return languagesNow;
 };
 
 module.exports = { updateWorkers };
