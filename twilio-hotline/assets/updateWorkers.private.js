@@ -223,31 +223,4 @@ const updateWorkers = async function (context) {
   return languagesNow;
 };
 
-// Whether any on-call operator speaks `language`. Reads the TaskRouter roster
-// that updateWorkers maintains: each operator on call has a worker in the
-// Available activity (the queue sets no busy activity, so operators stay
-// Available during calls), and workers waiting to be removed are Unavailable.
-// Only an array of languages counts, mirroring the workflow's
-// `task.language IN worker.languages`. Errs toward "yes": a failed lookup must
-// not tell a caller that nobody is there when the roster may be fine.
-const languageHasOperator = async function (context, language) {
-  try {
-    const workers = await context.getTwilioClient().taskrouter.v1
-      .workspaces(context.WORKSPACE_SID)
-      .workers
-      .list({ available: 'true' });
-    return workers.some((w) => {
-      try {
-        const languages = JSON.parse(w.attributes).languages;
-        return Array.isArray(languages) && languages.includes(language);
-      } catch {
-        return false;
-      }
-    });
-  } catch (e) {
-    console.error('language_has_operator_failed ' + (e.message || e));
-    return true;
-  }
-};
-
-module.exports = { updateWorkers, languageHasOperator };
+module.exports = { updateWorkers };
