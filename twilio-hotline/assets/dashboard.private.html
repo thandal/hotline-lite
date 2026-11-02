@@ -198,6 +198,10 @@
 
 <div class="card">
   <h2>Languages</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">
+    The hotline can greet callers in multiple languages. This list is ordered: the first language will be offered first in the phone menu, then the second, and so on.
+    Supported languages: <span id="supportedLanguages"></span>
+  </p>
   <div id="langList"></div>
   <div class="row">
     <input id="lCode" placeholder="fr">
@@ -437,15 +441,17 @@
         ' <span style="cursor:pointer;color:#dc2626" onclick="removeBlock(' + i + ')">&times;</span></span>';
     }).join('') : '<p style="color:#999;font-size:14px">None</p>';
 
+    $('supportedLanguages').innerHTML = Object.keys(DATA.supportedLanguages || {}).map(langName).join(', ');
+
     $('langList').innerHTML = DATA.languages.map(function (l, i) {
-      return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px">' + l +
+      return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px">' + langName(l) +
         ' <span style="cursor:pointer;color:#dc2626" onclick="removeLang(' + i + ')">&times;</span></span>';
     }).join('') || '<p style="color:#999;font-size:14px">None</p>';
 
     $('nameList').innerHTML = DATA.languages.length ? DATA.languages.map(function (l, i) {
       var val = (DATA.hotlineName && DATA.hotlineName[i]) || '';
       return '<div class="row" style="align-items:center">' +
-        '<span class="tag" style="align-self:center">' + l + '</span>' +
+        '<span class="tag" style="align-self:center">' + langName(l) + '</span>' +
         '<input id="name-' + i + '" value="' + escapeHtml(val) + '" placeholder="(default)">' +
         '</div>';
     }).join('') : '<p style="color:#999;font-size:14px">Add a language first</p>';
@@ -453,8 +459,8 @@
     var seqs = DATA.connectionSequences || [];
     $('seqBody').innerHTML = seqs.length ? seqs.map(function (c, i) {
       var lang = !c.language ? '<span style="color:#999">(menu)</span>'
-        : DATA.languages.indexOf(c.language) >= 0 ? escapeHtml(c.language)
-        : escapeHtml(c.language) + ' <span style="color:#999">(not offered, so the menu plays)</span>';
+        : DATA.languages.indexOf(c.language) >= 0 ? langName(c.language)
+        : langName(c.language) + ' <span style="color:#999">(not offered, so the menu plays)</span>';
       return '<tr id="seqrow-' + i + '">' +
         '<td>' + escapeHtml(c.number) + '</td>' +
         '<td>' + escapeHtml(c.name) + '</td>' +
@@ -592,6 +598,13 @@
     return String(s || '').replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
+  }
+
+  // Display name for a language code, e.g. "French (fr)"; just the code if
+  // it isn't a supported language.
+  function langName(code) {
+    var name = (DATA.supportedLanguages || {})[code];
+    return escapeHtml(name ? name + ' (' + code + ')' : code);
   }
 
   function renderActiveGroup(s) {
@@ -785,6 +798,7 @@
     var l = $('lCode').value.trim().toLowerCase();
     if (!l) return;
     if (DATA.languages.indexOf(l) >= 0) return showError('Language already exists');
+    if (!(DATA.supportedLanguages || {})[l]) return showError('Language not supported');
     api({ action: 'update-languages', languages: DATA.languages.concat([l]) })
       .then(function () { $('lCode').value = ''; })
       .then(reloadStatus)
@@ -849,8 +863,8 @@
     var langs = DATA.languages.slice();
     if (selected && langs.indexOf(selected) === -1) langs.push(selected);
     return '<option value="">Language menu</option>' + langs.map(function (l) {
-      var label = DATA.languages.indexOf(l) >= 0 ? l : l + ' (not offered)';
-      return '<option value="' + escapeHtml(l) + '"' + (l === selected ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+      var label = DATA.languages.indexOf(l) >= 0 ? langName(l) : langName(l) + ' (not offered)';
+      return '<option value="' + escapeHtml(l) + '"' + (l === selected ? ' selected' : '') + '>' + label + '</option>';
     }).join('');
   }
 
