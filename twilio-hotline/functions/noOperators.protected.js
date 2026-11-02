@@ -39,7 +39,7 @@ exports.handler = function (context, event, callback) {
     if (canLeaveMessage) {
       twiml.redirect('/record?noQueue=1&language=' + event.language + '&callerFrom=' + callerFrom);
     } else {
-      twiml.say(sayAttrs(event.language), messages.welcome.goodbye);
+      twiml.say(sayAttrs(event.language), messagesMap[event.language].caller.welcome.goodbye);
       twiml.hangup();
     }
   }

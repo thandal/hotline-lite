@@ -73,11 +73,11 @@ exports.handler = async function (context, event, callback) {
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
         const key = String(i + 1);
-        gather.say(sayAttrs(languages[i]), messagesMap[languages[i]].caller.welcome.hello.replace('{name}', hotlineName[i]));
+        gather.say(sayAttrs(languages[i]), messagesMap[languages[i]].caller.welcome.hello.replace('{hotline name}', hotlineName[i]));
         sayLangMap(
           gather,
           languages[i],
-          messagesMap[languages[i]].caller.welcome.menu.replace('{number}', key)
+          messagesMap[languages[i]].caller.welcome.menu.replace('{key}', key)
         );
         gather.pause({ length: 1 });
       }
@@ -100,7 +100,7 @@ exports.handler = async function (context, event, callback) {
     if (skipMenu) {
       key = presetLanguage || languages[0];
       // No menu, so this is the caller's only greeting.
-      twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{name}', hotlineName[languages.indexOf(key)]));
+      twiml.say(sayAttrs(key), messagesMap[key].caller.welcome.hello.replace('{hotline name}', hotlineName[languages.indexOf(key)]));
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed

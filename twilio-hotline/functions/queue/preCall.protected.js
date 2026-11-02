@@ -8,12 +8,12 @@ exports.handler = function (context, event, callback) {
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messagesMap[x].name);
   const localizedName = hotlineName[languages.indexOf(event.language)] || messagesMap[event.language].name;
   // Callers with a named entry in Special Call Handling are announced by that
-  // name (see assignment.protected.js). Fill {name} first so a caller name
-  // that happens to contain "{name}" is read as typed.
+  // name (see assignment.protected.js). Fill {hotline name} first so a caller
+  // name that happens to contain "{hotline name}" is read as typed.
   const precall = messagesMap[event.language].operator.precall;
   const intro = event.callerName
-    ? precall.introNamed.replace('{name}', localizedName).replace('{caller}', event.callerName)
-    : precall.intro.replace('{name}', localizedName);
+    ? precall.introNamed.replace('{hotline name}', localizedName).replace('{caller name}', event.callerName)
+    : precall.intro.replace('{hotline name}', localizedName);
 
   if (!event.Digits) {
     const gather = twiml.gather({

@@ -122,7 +122,11 @@ exports.handler = async function (context, event, callback) {
         console.error('usage_fetch_failed ' + (e.message || e));
       }
 
-      resp.setBody({ operators, blocklist, languages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
+      // The languages an admin may offer, as code -> display name, in list order.
+      const { langMap, supportedLanguages: supportedCodes } = require(Runtime.getAssets()['/language.js'].path);
+      const supportedLanguages = Object.fromEntries(supportedCodes.map(code => [code, langMap[code].name]));
+
+      resp.setBody({ operators, blocklist, languages, supportedLanguages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
 
     } else if (event.action === 'list-sms') {
       // Twilio records inbound messages in the Messages log whether or not the
@@ -181,6 +185,14 @@ exports.handler = async function (context, event, callback) {
       resp.setBody({ ok: true });
 
     } else if (event.action === 'update-languages') {
+      // A language with no messages would crash the greeting for every caller.
+      const { supportedLanguages } = require(Runtime.getAssets()['/language.js'].path);
+      const unsupported = event.languages.filter(l => !supportedLanguages.includes(l));
+      if (unsupported.length) {
+        resp.setStatusCode(400);
+        resp.setBody({ error: 'Not a supported language: ' + unsupported.join(', ') });
+        return callback(null, resp);
+      }
       const value = event.languages.join(',');
       const v = vars.find(v => v.key === 'LANGUAGES');
       if (v) await env.variables(v.sid).update({ value });

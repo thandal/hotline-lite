@@ -59,6 +59,8 @@ Operators can sign up to be a backup operator by putting the word "backup" or "s
 
 Operator shift registries are stored securely in Twilio Serverless environment variables.
 
+If no shared calendar is provided, all Operators are considered active.
+
 ## Worker Registry
 Manage your registry of workers/operators from the admin dashboard (the **Operators** panel), where you can view, add, edit, and remove operators.
 
@@ -77,6 +79,18 @@ All data is stored securely in Twilio Serverless environment variables.
 
 ## Blocklist
 Manage the blocklist from the admin dashboard (the **Blocklist** panel). Operators can also add a caller's number to the blocklist at the end of a call.
+
+## Supported Languages
+
+The hotline currently supports the following languages:
+
+- English
+- Spanish
+- French
+
+A language can be offered only once every phone message has been translated into it
+(`messagesMap` in `twilio-hotline/assets/language.private.js`); the admin dashboard
+lists the supported languages and refuses any other.
 
 ## Cost
 
@@ -97,6 +111,8 @@ These fees are managed by and payable to Twilio.
    - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
  - [X] Create a web interface for management of the operator lists, blocklists, and other config
  - [ ] Allow operator shift calendar to be enabled or disabled by language
+ - [ ] Support additional languages, starting with Dari and Farsi
+   - _(Twilio has no Persian voice, so these need a test call by a speaker before they are offered)_
  - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU
 
 # Development notes for twilio-hotline
@@ -122,7 +138,7 @@ Remove a service:
 `twilio api:serverless:v1:services:remove --sid BLAH`
 
 Remove a build:
-`twilio api:serverless:v1:services:builds:remove --sid BLAH --service-sid BUILD_BLAH`
+`twilio api:serverless:v1:services:builds:remove --service-sid BLAH --sid BUILD_BLAH`
 
 Remove a function:
 `twilio api:serverless:v1:services:functions:remove --service-sid BLAH --sid FUNTION_BLAH`

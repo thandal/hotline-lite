@@ -54,7 +54,7 @@ const formatE164 = function (phone) {
 // This is a TwiML helper function that can be used to say a phone number in a more human-friendly way.
 // The twiml object must have a say() sub-verb. Examples include twiml itself, and twiml.gather.
 const sayLangMap = function (twiml, lang2, message, phone = "") {
-  const messageParts = message.split("{number}");
+  const messageParts = message.split("{phone number}");
   for (let i = 0; i < messageParts.length; i++) {
     const say = twiml.say(sayAttrs(lang2), messageParts[i]);
     if (i < messageParts.length - 1) {
@@ -64,13 +64,21 @@ const sayLangMap = function (twiml, lang2, message, phone = "") {
   }
 }
 
+// Placeholders, filled in by the code that speaks each message:
+//   {hotline name}  the hotline's name in this language (HOTLINE_NAME, or `name` below)
+//   {key}           the key to press for this language in the language menu
+//   {caller name}   the name given to the caller's number in Special Call Handling
+//   {phone number}  the caller's phone number, read out digit by digit
+//
+// A language can be offered on the hotline only once it has every message
+// below (see supportedLanguages at the end of this file).
 const messagesMap = {
   en: {
     name: "the community hotline",
     caller: {
       welcome: {
-        hello: "Thank you for calling {name}.",
-        menu: "Press {number} for English.",
+        hello: "Thank you for calling {hotline name}.",
+        menu: "Press {key} for English.",
         goodbye: "Goodbye.",
       },
       wait: {
@@ -91,9 +99,9 @@ const messagesMap = {
     },
     operator: {
       precall: {
-        intro: "This is a call from {name}. Press any key to accept the call.",
-        introNamed: "This is a call from {caller}, through {name}. Press any key to accept the call.",
-        noResponse: "You didn't respond, so we're moving on to another operator. This call was from {number}.",
+        intro: "This is a call from {hotline name}. Press any key to accept the call.",
+        introNamed: "This is a call from {caller name}, through {hotline name}. Press any key to accept the call.",
+        noResponse: "You didn't respond, so we're moving on to another operator. This call was from {phone number}.",
         reservationStatus: {
           rescinded: "Another operator answered this call.",
           canceled: "The caller hung up.",
@@ -102,9 +110,9 @@ const messagesMap = {
       },
       postcall: {
         options: "Call finished. Press 1 to repeat the caller's number. Press 2 to add the caller to the blocklist. Press 3 to call the caller back.",
-        callerNumber: "This call was from {number}.",
-        blocking: "Blocking calls from {number}.",
-        callingBack: "Calling {number}.",
+        callerNumber: "This call was from {phone number}.",
+        blocking: "Blocking calls from {phone number}.",
+        callingBack: "Calling {phone number}.",
       }
     }
   },
@@ -112,8 +120,8 @@ const messagesMap = {
     name: "la linea directa comunitaria",
     caller: {
       welcome: {
-        hello: "Gracias por llamar a {name}.",
-        menu: "Presione {number} para español.",
+        hello: "Gracias por llamar a {hotline name}.",
+        menu: "Presione {key} para español.",
         goodbye: "Cuídese.",
       },
       wait: {
@@ -134,9 +142,9 @@ const messagesMap = {
     },
     operator: {
       precall: {
-        intro: "Esta es una llamada de {name}. Presione cualquier tecla para aceptar la llamada.",
-        introNamed: "Esta es una llamada de {caller}, a través de {name}. Presione cualquier tecla para aceptar la llamada.",
-        noResponse: "No respondió, así que pasamos a otro operador. Esta llamada era de {number}.",
+        intro: "Esta es una llamada de {hotline name}. Presione cualquier tecla para aceptar la llamada.",
+        introNamed: "Esta es una llamada de {caller name}, a través de {hotline name}. Presione cualquier tecla para aceptar la llamada.",
+        noResponse: "No respondió, así que pasamos a otro operador. Esta llamada era de {phone number}.",
         reservationStatus: {
           rescinded: "Otre operador respondió a esta llamada.",
           canceled: "La persona en espera terminó la llamada.",
@@ -145,12 +153,60 @@ const messagesMap = {
       },
       postcall: {
         options: "Llamada finalizada. Presione 1 para escuchar el número de nuevo. Presione 2 para bloquearlo. Presione 3 para marcarlo de nuevo.",
-        callerNumber: "Esta llamada era de {number}.",
-        blocking: "Se bloquearon llamadas de {number}.",
-        callingBack: "Marcando {number}.",
+        callerNumber: "Esta llamada era de {phone number}.",
+        blocking: "Se bloquearon llamadas de {phone number}.",
+        callingBack: "Marcando {phone number}.",
+      }
+    }
+  },
+  fr: {
+    name: "la ligne communautaire",
+    caller: {
+      welcome: {
+        hello: "Merci d'avoir appelé {hotline name}.",
+        menu: "Appuyez sur {key} pour le français.",
+        goodbye: "Prenez soin de vous.",
+      },
+      wait: {
+        connecting: "Quelqu'un sera avec vous sous peu.",
+        leaveAMessage: "Veuillez rester en ligne, ou appuyez sur n'importe quelle touche pour laisser un message.",
+        noOperator: {
+          notice: "Désolé, aucun opérateur parlant français n'est disponible.",
+          options: {
+            messageOrLanguage: "Appuyez sur 0 pour choisir une autre langue, ou sur n'importe quelle autre touche pour laisser un message.",
+            message: "Restez en ligne ou appuyez sur n'importe quelle touche pour laisser un message.",
+            language: "Appuyez sur 0 pour choisir une autre langue.",
+          },
+        },
+      },
+      record: {
+        prompt: "Veuillez laisser un message après le bip sonore.",
+      }
+    },
+    operator: {
+      precall: {
+        intro: "Ceci est un appel de {hotline name}. Appuyez sur n'importe quelle touche pour accepter l'appel.",
+        introNamed: "Ceci est un appel de {caller name}, via {hotline name}. Appuyez sur n'importe quelle touche pour accepter l'appel.",
+        noResponse: "Aucune réponse, nous passons donc à un autre opérateur. Cet appel provenait de {phone number}.",
+        reservationStatus: {
+          rescinded: "Un autre opérateur a répondu à cet appel.",
+          canceled: "La personne en attente a terminé l'appel.",
+          default: "L'appel a été terminé.",
+        }
+      },
+      postcall: {
+        options: "Appel terminé. Appuyez sur 1 pour écouter le numéro à nouveau. Appuyez sur 2 pour le bloquer. Appuyez sur 3 pour le rappeler.",
+        callerNumber: "Cet appel provenait de {phone number}.",
+        blocking: "Les appels de {phone number} ont été bloqués.",
+        callingBack: "Rappel de {phone number}.",
       }
     }
   }
 };
 
-module.exports = { langMap, sayAttrs, sayLangMap, messagesMap, formatE164 };
+// The languages the hotline can offer, in menu-list order: those with both a
+// locale above and a full set of messages. langMap also lists languages with
+// no messages yet, so the dashboard and the admin API check against this list.
+const supportedLanguages = Object.keys(messagesMap).filter(code => langMap[code]);
+
+module.exports = { langMap, sayAttrs, sayLangMap, messagesMap, formatE164, supportedLanguages };
