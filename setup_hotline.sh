@@ -94,6 +94,8 @@ if [ ${#SERVICE_SID} != 34 ]
 then
     echo "Service SID not found"
     exit
+else
+    set_env_var "SERVICE_SID" "$SERVICE_SID"
 fi
 #echo Service SID: $SERVICE_SID
 
@@ -105,6 +107,8 @@ if [ ${#ENVIRONMENT_SID} != 34 ]
 then
     echo "Environment SID not found"
     exit
+else
+    set_env_var "ENVIRONMENT_SID" "$ENVIRONMENT_SID"
 fi
 #echo Environment SID: $ENVIRONMENT_SID
 

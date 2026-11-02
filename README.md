@@ -18,7 +18,7 @@ A simple, privacy-first Twilio-based hotline. Key features
 
 # Setup
 
-1. Install twilio CLI: https://www.twilio.com/docs/twilio-cli/getting-started/install
+1. Install the [Twilio CLI](https://www.twilio.com/docs/twilio-cli/getting-started/install)
 2. Clone this repo: `gh repo clone thandal/hotline-lite`
 3. Run the setup script: `./setup_hotline.sh`
 
@@ -88,6 +88,17 @@ These fees are managed by and payable to Twilio.
 
 <img width="1426" height="859" alt="image" src="https://github.com/user-attachments/assets/34111b89-4565-4711-b548-09126cc16868" />
 
+# To-do
+
+ - [X] Deliver voicemail messages left by callers to the operator group
+   - The current approach integrates with Signal, via the presage-cli, and relies on access to a remote database (because twilio serverless doesn't support cloud storage). All this is more complex than we'd like!
+ - [ ] Handle incoming text messages
+ - [ ] Allow operators to place outbound calls? 
+   - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
+ - [X] Create a web interface for management of the operator lists, blocklists, and other config
+ - [ ] Allow operator shift calendar to be enabled or disabled by language
+ - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU
+
 # Development notes for twilio-hotline
 
 `cd twilio-hotline`
@@ -115,14 +126,3 @@ Remove a build:
 
 Remove a function:
 `twilio api:serverless:v1:services:functions:remove --service-sid BLAH --sid FUNTION_BLAH`
-
-
-# To-do
-
- - [X] Deliver voicemail messages left by callers to the operator group
-   - The current approach integrates with Signal, via the presage-cli, and relies on access to a remote database (because twilio serverless doesn't support cloud storage). All this is more complex than we'd like!
- - [ ] Handle incoming text messages
- - [ ] Allow operators to place outbound calls? 
-   - _(Perhaps limited to a directory of pre-defined contacts in order to mitigate trust and safety concerns)_
- - [X] Create a web interface for management of the operator lists, blocklists, and other config
- - [ ] Move [default Twilio data residency](https://www.twilio.com/docs/global-infrastructure) to the EU
