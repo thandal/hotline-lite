@@ -88,9 +88,8 @@ The hotline currently supports the following languages:
 - Spanish
 - French
 
-A language can be offered only once every phone message has been translated into it
-(`messagesMap` in `twilio-hotline/assets/language.private.js`); the admin dashboard
-lists the supported languages and refuses any other.
+Every supported language must have a complete set of messages in `twilio-hotline/assets/messages`;
+the admin dashboard lists the supported languages and refuses any other.
 
 ## Cost
 

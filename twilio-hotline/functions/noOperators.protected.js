@@ -4,12 +4,13 @@
 // menu when there is more than one language. Like the language menu, it is said
 // twice, and silence or any other key ends the call with a goodbye.
 exports.handler = function (context, event, callback) {
-  const { sayAttrs, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const { sayAttrs, loadMessages } = require(Runtime.getAssets()['/language.js'].path);
   const twiml = new Twilio.twiml.VoiceResponse();
   const languages = (context.LANGUAGES || 'es,en').split(',');
   const canLeaveMessage = !!context.GROUP_KEY;
   const canChooseLanguage = languages.length > 1;
-  const messages = messagesMap[event.language].caller.wait;
+  const messages = loadMessages(languages)[event.language].caller;
+  const waitMessages = messages.wait.noOperator;
   const callerFrom = encodeURIComponent(event.callerFrom);
   const activeLanguages = encodeURIComponent(event.activeLanguages) || '';
 
@@ -22,9 +23,9 @@ exports.handler = function (context, event, callback) {
     // (gateway key sequence, roster sync).
     twiml.redirect('/hotline?Digits=0&activeLanguages=' + activeLanguages);
   } else {
-    const options = canLeaveMessage && canChooseLanguage ? messages.noOperator.options.messageOrLanguage
-      : canLeaveMessage ? messages.noOperator.options.message
-      : canChooseLanguage ? messages.noOperator.options.language
+    const options = canLeaveMessage && canChooseLanguage ? waitMessages.options.messageOrLanguage
+      : canLeaveMessage ? waitMessages.options.message
+      : canChooseLanguage ? waitMessages.options.language
       : null;
     // Only gather when there is a key to press. The gather posts back here with
     // the language and caller intact.
@@ -32,14 +33,14 @@ exports.handler = function (context, event, callback) {
       ? twiml.gather({ numDigits: 1, action: '/noOperators?language=' + event.language + '&callerFrom=' + callerFrom + '&activeLanguages=' + activeLanguages })
       : twiml;
     for (let n = 0; n < 2; n++) {
-      target.say(sayAttrs(event.language), messages.noOperator.notice);
+      target.say(sayAttrs(event.language), waitMessages.notice);
       if (options) target.say(sayAttrs(event.language), options);
       target.pause({ length: 1 });
     }
     if (canLeaveMessage) {
       twiml.redirect('/record?noQueue=1&language=' + event.language + '&callerFrom=' + callerFrom);
     } else {
-      twiml.say(sayAttrs(event.language), messagesMap[event.language].caller.welcome.goodbye);
+      twiml.say(sayAttrs(event.language), messages.main.goodbye);
       twiml.hangup();
     }
   }
