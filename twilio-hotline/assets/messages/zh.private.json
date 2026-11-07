@@ -1,0 +1,43 @@
+{
+  "name": "社区热线",
+  "caller": {
+    "welcome": {
+      "hello": "感谢您致电 {hotline name}。",
+      "menu": "如需普通话服务，请按 {key}。",
+      "goodbye": "再见。"
+    },
+    "wait": {
+      "connecting": "接线员将很快为您接听。",
+      "leaveAMessage": "请耐心等待，或按任意键留言。",
+      "noOperator": {
+        "notice": "抱歉，目前暂无普通话接线员可以接听。",
+        "options": {
+          "messageOrLanguage": "如需选择其他语言，请按 0；如需留言，请按其他任意键。",
+          "message": "请耐心等待，或按任意键留言。",
+          "language": "如需选择其他语言，请按 0。"
+        }
+      }
+    },
+    "record": {
+      "prompt": "请在滴声后留言。"
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "您有一通来自 {hotline name} 的来电。请按任意键接听。",
+      "introNamed": "{caller name} 正通过 {hotline name} 致电给您。请按任意键接听。",
+      "noResponse": "由于您未接听，我们将转接其他接线员。本次来电号码为 {phone number}。",
+      "reservationStatus": {
+        "rescinded": "其他接线员已接听此来电。",
+        "canceled": "来电者已挂断。",
+        "default": "其他人已接听，或来电者已挂断。"
+      }
+    },
+    "postcall": {
+      "options": "通话已结束。按 1 重听来电号码，按 2 将来电者加入黑名单，按 3 回拨来电者。",
+      "callerNumber": "本次来电号码为 {phone number}。",
+      "blocking": "正在屏蔽来自 {phone number} 的来电。",
+      "callingBack": "正在拨打 {phone number}。"
+    }
+  }
+}

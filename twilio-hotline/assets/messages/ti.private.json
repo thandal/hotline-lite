@@ -1,0 +1,43 @@
+{
+  "name": "ናይ ሕብረተሰብ መስመር ሓገዝ",
+  "caller": {
+    "welcome": {
+      "hello": "ናብ {hotline name} ስለ ዝደወልኩም ነመስግን",
+      "menu": "እንግሊዝኛ ንምምራጽ {key} ጠውቕ።",
+      "goodbye": " ደሓን ኩኑ"
+    },
+    "wait": {
+      "connecting": "ሓደ ሰብ  ቀልጢፉ ክመጸኩም እዩ",
+      "leaveAMessage": "ኣብ መስመር ጽንሑ፡ ወይ ዝኾነ መፍትሕ ብምጽቃጥ መልእኽቲ ግደፉ።",
+      "noOperator": {
+        "notice": "ይቕሬታ፡ እንግሊዝኛ ዝዛረብ ኦፕሬተራት የለዉን::",
+        "options": {
+          "messageOrLanguage": "ድምጺ መልእኽቲ ምስ ተሰምዐ :መልእኽትኹም ግደፉ።",
+          "message": "ኣብ መስመር ተጸበዩ ወይ መልእኽቲ ንምግዳፍ ዝኾነ መፍትሕ ጠውቑ።",
+          "language": "ካልእ ቋንቋ ንምምራጽ 0 ጠውቕ።"
+        }
+      }
+    },
+    "record": {
+      "prompt": "ድምጺ መልእኽቲ ምስ ተሰምዐ :መልእኽትኹም ግደፉ።"
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "እዚ ካብ {hotline name} ዝመጸ ጻውዒት እዩ። ነቲ ጻውዒት ንምቕባል ዝኾነ መፍትሕ ጠውቑ   ።",
+      "introNamed": "እዚ ካብ {caller name}፣ ብመንገዲ {hotline name} ዝመጸ ጻውዒት እዩ። ነቲ ጻውዒት ንምቕባል ዝኾነ መፍትሕ ጠውቑ።",
+      "noResponse": "መልሲ ኣይሃብኩምን፡ ስለዚ ናብ ካልእ ኦፕሬተር ንሰጋገር ኣለና። እዚ ጻውዒት ካብ {ቁጽሪ ተሌፎን} እዩ ነይሩ።",
+      "reservationStatus": {
+        "rescinded": "ካልእ ኦፕሬተር ነዚ ጻውዒት መሊሱሉ።",
+        "canceled": "እቲ ደዋሊ ቴለፎን ዓጸዩ።",
+        "default": "ካልእ ሰብ መሊሱ ወይ እቲ ደዋሊ ቴለፎን ዓጽዩ።"
+      }
+    },
+    "postcall": {
+      "options": "ቁጽሪ  ደዋሊ ንምድጋም 1 ጠውቑ   ።  ንደዋሊ ናብ ብሎክሊስት ንምውሳኽ 2 ጠውቑ። ንደዋሊ ዳግማይ ንምድዋል  3 ጠውቑ።",
+      "callerNumber": "እዚ ጻውዒት ካብ {phone number} ዝመጸ እዩ።",
+      "blocking": "ካብ {phone number} ዝመጹ ጻውዒታት ይኽልከሉ ኣለዉ።",
+      "callingBack": "ናብ {phone number} እድውል ኣለኹ።"
+    }
+  }
+}

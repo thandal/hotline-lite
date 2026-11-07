@@ -76,7 +76,12 @@ exports.handler = async function (context, event, callback) {
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
         const key = String(i + 1);
-        gather.say(sayAttrs(languages[i]), messages[languages[i]].caller.main.hello.replace('{hotline name}', hotlineName[i]));
+        var intro = messages[languages[i]].caller.main.hello.replace('{hotline name}', hotlineName[i]);
+        if (["uk", "ru"].includes(languages[i])) {
+          // Ukrainian and Russian nouns indicate grammatical case. We add the hotline name in accusative case here.
+          intro = intro.replace('{hotline name:acc}', localizedName.acc);
+        }
+        gather.say(sayAttrs(languages[i]), intro);
         sayLangMap(
           gather,
           languages[i],

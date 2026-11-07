@@ -1,0 +1,43 @@
+{
+  "name": "a central de atendimento da comunidade",
+  "caller": {
+    "welcome": {
+      "hello": "Obrigado por ligar para {hotline name}.",
+      "menu": "Digite {key} para português.",
+      "goodbye": "Até logo."
+    },
+    "wait": {
+      "connecting": "Alguém te atenderá dentro de uns instantes.",
+      "leaveAMessage": "Por favor, permaneça na linha ou pressione qualquer tecla para deixar uma mensagem.",
+      "noOperator": {
+        "notice": "Desculpe, estamos sem atendentes que falem português disponíveis.",
+        "options": {
+          "messageOrLanguage": "Digite 0 para escolher outro idioma ou pressione qualquer outra tecla para deixar uma mensagem.",
+          "message": "Fique na linha ou pressione qualquer tecla para deixar uma mensagem.",
+          "language": "Pressione 0 para escolher outro idioma."
+        }
+      }
+    },
+    "record": {
+      "prompt": "Por favor, deixe uma mensagem após o sinal."
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "Essa é uma chamada da {hotline name}. Pressione qualquer tecla para atender a ligação.",
+      "introNamed": "Esta é uma chamada de {caller name}, pela {hotline name}. Pressione qualquer tecla para atender a chamada.",
+      "noResponse": "Como você não atendeu, vamos passar para outro agente. A ligação foi feita do número {phone number}.",
+      "reservationStatus": {
+        "rescinded": "Outro agente atendeu essa chamada.",
+        "canceled": "A pessoa que ligou desligou.",
+        "default": "Outra pessoa atendeu ou quem ligou desligou."
+      }
+    },
+    "postcall": {
+      "options": "A chamada foi encerrada. Pressione 1 para rediscar o número do autor da chamada. Pressione 2 para adicionar o autor da chamada à lista de bloqueados. Pressione 3 para ligar de volta para o autor da chamada.",
+      "callerNumber": "Essa ligação foi feita do número {phone number}.",
+      "blocking": "Bloqueando chamadas do {phone number}.",
+      "callingBack": "Ligando para {phone number}."
+    }
+  }
+}

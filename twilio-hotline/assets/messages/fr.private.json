@@ -37,7 +37,7 @@
       "options": "L'appel est terminé. Pour répéter le numéro du correspondant, tapez 1. Pour bloquer le correspondant, tapez 2. Pour rappeler le correspondant, tapez 3.",
       "callerNumber": "Cet appel provenait du {phone number}.",
       "blocking": "Appels du {phone number} bloqués.",
-      "callingBack": "Appel au {phone number} en cours."
+      "callingBack": "Appel du {phone number} en cours."
     }
   }
 }

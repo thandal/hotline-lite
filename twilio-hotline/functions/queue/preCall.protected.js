@@ -16,6 +16,11 @@ exports.handler = function (context, event, callback) {
     ? precallMessages.introNamed.replace('{hotline name}', localizedName).replace('{caller name}', event.callerName)
     : precallMessages.intro.replace('{hotline name}', localizedName);
 
+  if (event.language == "uk" || event.language == "ru") {
+    // Ukrainian and Russian nouns indicate grammatical case. We add the hotline name in nominative case here.
+    intro = intro.replace('{hotline name:nom}', localizedName.nom);
+  }
+
   if (!event.Digits) {
     const gather = twiml.gather({
       numDigits: 1,

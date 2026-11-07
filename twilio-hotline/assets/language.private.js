@@ -16,22 +16,23 @@
 // read aloud by a voice from an unrelated language.
 const langMap = {
   // no compatible voice identified - am: { locale: 'am-ET', name: 'Amharic' }, // will Google.am-ET-Wavenet-A work?
-  // not supported - ar: { locale: 'ar-IQ', name: 'Arabic', voice: 'Polly.Hala-Neural' }, // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
+  ar: { locale: 'ar-IQ', name: 'Arabic', voice: 'Polly.Hala-Neural' }, // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
   en: { locale: 'en-US', name: 'English', voice: 'Polly.Joanna-Neural' },
   es: { locale: 'es-MX', name: 'Spanish', voice: 'Polly.Mia-Neural' },
-  // not supported - fa_af: { locale: 'fa-AF', name: 'Dari' }, // Distinct from Farsi (fa-IR); will Polly.Hala-Neural work?
-  // not supported - fa_ir: { locale: 'fa-IR', name: 'Farsi' }, // Distinct from Dari (fa-AF); will Polly.Hala-Neural work?
+  fa_af: { locale: 'fa-AF', name: 'Dari' }, // Distinct from Farsi (fa-IR); will Polly.Hala-Neural work?
+  fa_ir: { locale: 'fa-IR', name: 'Farsi' }, // Distinct from Dari (fa-AF); will Polly.Hala-Neural work?
   fr: { locale: 'fr-FR', name: 'French', voice: 'Polly.Lea-Neural' },
   // no compatible voice identified - ht: { locale: 'ht-HT', name: 'Haitian Creole' }, // will Google.ht-HT-Wavenet-A work?
   // no compatible voice identified - ku: { locale: 'ku-IQ', name: 'Kurdish' }, // will Google.ku-IQ-Wavenet-A work?
-  // not supported - pt: { locale: 'pt-BR', name: 'Portuguese', voice: 'Polly.Camila-Neural' },
-  // not supported - ru: { locale: 'ru-RU', name: 'Russian', voice: 'Google.ru-RU-Wavenet-A' },
+  // no compatible voice identified - ne: { locale: 'ne-NP', name: 'Nepali' }, // will Google.ne-NP-Wavenet-A work?
+  pt: { locale: 'pt-BR', name: 'Portuguese', voice: 'Polly.Camila-Neural' },
+  ru: { locale: 'ru-RU', name: 'Russian', voice: 'Google.ru-RU-Wavenet-A' },
   // no compatible voice identified - rw: { locale: 'rw-RW', name: 'Kinyarwanda' }, // will Google.rw-RW-Wavenet-A work?
   // no compatible voice identified - sw: { locale: 'sw-KE', name: 'Swahili' }, // will Google.sw-KE-Wavenet-A work?
   // no compatible voice identified - ti: { locale: 'ti-ET', name: 'Tigrinya' }, // will Google.ti-ET-Wavenet-A work?
-  // not supported - uk: { locale: 'uk-UA', name: 'Ukrainian', voice: 'uk-UA-Chirp3-HD-Achernar' }, // No Ukrainina Neural voice, so using Google Generative voice (Chirp3-HD) instead of Polly Standard voice
-  // not supported - vi: { locale: 'vi-VN', name: 'Vietnamese', voice: 'Google.vi-VN-Wavenet-A' },
-  // not supported - zh: { locale: 'zh-CN', name: 'Mandarin', voice: 'Polly.Zhiyu-Neural' },
+  uk: { locale: 'uk-UA', name: 'Ukrainian', voice: 'uk-UA-Chirp3-HD-Achernar' }, // No Ukrainina Neural voice, so using Google Generative voice (Chirp3-HD) instead of Polly Standard voice
+  vi: { locale: 'vi-VN', name: 'Vietnamese', voice: 'Google.vi-VN-Wavenet-A' },
+  zh: { locale: 'zh-CN', name: 'Mandarin', voice: 'Polly.Zhiyu-Neural' },
 };
 
 // Build the attributes object for a TwiML <Say>: always sets the language
