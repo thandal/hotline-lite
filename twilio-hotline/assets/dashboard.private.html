@@ -447,7 +447,7 @@
     }).join(', ') || '<p style="color:#999;font-size:14px">No languages supported</p>';
 
     $('langList').innerHTML = DATA.languages.map(function (l, i) {
-      return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px">' + langName(l) +
+      return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px"><b>' + (i + 1) + '</b>: ' + langName(l) +
         ' <span style="cursor:pointer;color:#dc2626" onclick="removeLang(' + i + ')">&times;</span></span>';
     }).join('') || '<p style="color:#999;font-size:14px">None</p>';
 
