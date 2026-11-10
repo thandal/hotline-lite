@@ -42,7 +42,13 @@ function runner(_context, dbPath) {
         //}
       }
       if (res.status !== 0) {
-        const err = new Error(`presage-cli ${subArgs.join(' ')} exited ${res.status}`);
+        // Name only the subcommand: the other arguments include the group's master
+        // key and the message text, which don't belong in the error log. Instead
+        // carry presage-cli's own report of what went wrong, which it prints to
+        // stderr from a line starting "Error: " to the end.
+        const report = (res.stderr || '').match(/^Error: [\s\S]*/m);
+        const reason = report ? report[0].trim() : (res.stderr || '').trim().split('\n').slice(-5).join('\n');
+        const err = new Error(`presage-cli ${subArgs[0]} exited ${res.status}${reason ? ': ' + reason : ''}`);
         err.status = res.status;
         err.stdout = res.stdout;
         err.stderr = res.stderr;
