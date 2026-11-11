@@ -7,7 +7,6 @@ exports.handler = async function (context, event, callback) {
   // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
   const languages = (context.LANGUAGES || 'es,en').split(',');
   const messages = loadMessages(languages);
-  console.log(messages);
   const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messages[x].name);
   const twiml = new Twilio.twiml.VoiceResponse();
 

@@ -1,5 +1,5 @@
 const fr = {
-    "name": "l'assistance téléphonique communautaire.",
+    "name": "l'assistance téléphonique communautaire",
     "caller": {
       "main": {
         "hello": "Merci d'avoir appelé {hotline name}.",
@@ -37,7 +37,7 @@ const fr = {
         "options": "L'appel est terminé. Pour répéter le numéro du correspondant, tapez 1. Pour bloquer le correspondant, tapez 2. Pour rappeler le correspondant, tapez 3.",
         "callerNumber": "Cet appel provenait du {phone number}.",
         "blocking": "Appels du {phone number} bloqués.",
-        "callingBack": "Appel du {phone number} en cours."
+        "callingBack": "Appel au {phone number} en cours."
       }
     }
   }

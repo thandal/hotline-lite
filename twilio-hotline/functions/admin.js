@@ -48,12 +48,12 @@ exports.handler = async function (context, event, callback) {
   if (event.action === 'login') {
     if (!context.ADMIN_PASSWORD) {
       resp.setStatusCode(500);
-      resp.setBody({ warning: 'ADMIN_PASSWORD not configured' });
+      resp.setBody({ error: 'ADMIN_PASSWORD not configured' });
       return callback(null, resp);
     }
     if (event.password !== context.ADMIN_PASSWORD) {
       resp.setStatusCode(401);
-      resp.setBody({ warning: 'Invalid password' });
+      resp.setBody({ error: 'Invalid password' });
       return callback(null, resp);
     }
     const salt = crypto.randomBytes(16).toString('hex');

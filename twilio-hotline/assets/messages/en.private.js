@@ -12,9 +12,9 @@ const en = {
       "noOperator": {
         "notice": "Sorry, no English-speaking operators are available.",
         "options": {
-          "messageOrLanguage": "Remain on the line to leave a message, or press any key to choose another language.",
+          "messageOrLanguage": "Press 0 to choose another language, or press any other key to leave a message.",
           "message": "Remain on the line to leave a message.",
-          "language": "Press any key to choose another language."
+          "language": "Press 0 to choose another language."
         }
       }
     },

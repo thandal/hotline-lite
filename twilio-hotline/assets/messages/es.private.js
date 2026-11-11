@@ -12,9 +12,9 @@ const es = {
       "noOperator": {
         "notice": "Lo sentimos, no hay operadores disponibles que hablen español.",
         "options": {
-          "messageOrLanguage": "Permanezca en la línea para dejar un mensaje, o presione cualquier tecla para elegir otro idioma.",
+          "messageOrLanguage": "Presione 0 para elegir otro idioma, o presione cualquier otra tecla para dejar un mensaje.",
           "message": "Permanezca en la línea para dejar un mensaje.",
-          "language": "Presione cualquier tecla para elegir otro idioma."
+          "language": "Presione 0 para elegir otro idioma."
         }
       }
     },

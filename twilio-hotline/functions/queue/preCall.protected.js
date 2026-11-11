@@ -4,13 +4,14 @@ exports.handler = function (context, event, callback) {
 
   const twiml = new Twilio.twiml.VoiceResponse();
   
-  const messages = loadMessages([event.language])[event.language].operator.precall;
+  const messages = loadMessages([event.language])[event.language];
   const languages = (context.LANGUAGES || 'es,en').split(',');
-  const localizedName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',')[languages.indexOf(event.language)] : messages.name;
+  // Fall back to the built-in name when HOTLINE_NAME has no entry for this language.
+  const localizedName = (context.HOTLINE_NAME && context.HOTLINE_NAME.split(',')[languages.indexOf(event.language)]) || messages.name;
   // Callers with a named entry in Special Call Handling are announced by that
   // name (see assignment.protected.js). Fill {hotline name} first so a caller
   // name that happens to contain "{hotline name}" is read as typed.
-  const precallMessages = messages.precall;
+  const precallMessages = messages.operator.precall;
   const intro = event.callerName
     ? precallMessages.introNamed.replace('{hotline name}', localizedName).replace('{caller name}', event.callerName)
     : precallMessages.intro.replace('{hotline name}', localizedName);
