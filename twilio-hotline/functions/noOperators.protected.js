@@ -22,7 +22,7 @@ exports.handler = function (context, event, callback) {
     // /record is the queue's exit handler; noQueue=1 tells it the caller
     // asked for a message without having been queued.
     twiml.redirect('/record?noQueue=1&language=' + event.language + '&callerFrom=' + callerFrom);
-  } else if (event.Digits && (event.Digits == 0 || canChooseLanguage)) {
+  } else if (event.Digits && canChooseLanguage) {
     // If the caller can choose a different language and pressed 0, 
     // or if the caller pressed any key and can choose a different language 
     // but cannot leave a message, go back to the language menu.

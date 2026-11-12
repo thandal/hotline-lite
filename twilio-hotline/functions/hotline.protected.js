@@ -50,7 +50,9 @@ exports.handler = async function (context, event, callback) {
     }
   }
 
-  let activeLanguages = event.activeLanguages ? new Set(event.activeLanguages.split(',') || '') : [];
+  // The languages on-call operators speak, passed along from earlier in the
+  // call. Empty when nobody is on call; a Set either way, so .has() works.
+  let activeLanguages = new Set(event.activeLanguages ? event.activeLanguages.split(',') : []);
 
   if (!event.Digits) {
     // Update the workers first. Worker sync is a best-effort refresh, never a
