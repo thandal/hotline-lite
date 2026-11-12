@@ -88,8 +88,11 @@ The hotline currently supports the following languages:
 - Spanish
 - French
 
-Every supported language must have a complete set of messages in `twilio-hotline/assets/messages`;
-the admin dashboard lists the supported languages and refuses any other.
+Each language's phone messages are in `twilio-hotline/assets/messages/<code>.private.json`.
+To add a language, copy `en.private.json`, translate every message, and add the language's
+locale and voice to `langMap` in `twilio-hotline/assets/language.private.js`. A language is
+offered only when its file has every message the English file has; the admin dashboard lists
+the supported languages and refuses any other.
 
 ## Cost
 

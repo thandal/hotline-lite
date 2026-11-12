@@ -202,6 +202,7 @@
     The hotline can greet callers in multiple languages. This list is ordered: the first language will be offered first in the phone menu, then the second, and so on.
     Supported languages: <span id="supportedLanguages"></span>
   </p>
+  <div id="incompleteLanguages"></div>
   <div id="langList"></div>
   <div class="row">
     <input id="lCode" placeholder="fr">
@@ -446,6 +447,19 @@
         '<span>' + DATA.supportedLanguages[c] + ' (<b>' + c + '</b>)' + '</span>';
     }).join(', ') || '<p style="color:#999;font-size:14px">No languages supported</p>';
 
+    // Languages whose message file lacks some messages, and what each lacks.
+    $('incompleteLanguages').innerHTML = Object.keys(DATA.incompleteLanguages || {}).map(function (c) {
+      var l = DATA.incompleteLanguages[c];
+      var name = escapeHtml(l.name) + ' (<b>' + escapeHtml(c) + '</b>)';
+      var file = 'twilio-hotline/assets/messages/' + escapeHtml(c) + '.private.json';
+      var effect = DATA.languages.indexOf(c) >= 0
+        ? escapeHtml(l.name) + ' calls may fail where these messages are needed.'
+        : 'It can\'t be added until they are.';
+      return '<p style="font-size:13px;color:#b45309;margin-bottom:8px">' + name +
+        ' is missing messages that a developer needs to add to ' + file + ': ' +
+        l.missing.map(escapeHtml).join(', ') + '. ' + effect + '</p>';
+    }).join('');
+
     $('langList').innerHTML = DATA.languages.map(function (l, i) {
       return '<span class="tag" style="font-size:14px;padding:4px 8px;margin:2px"><b>' + (i + 1) + '</b>: ' + langName(l) +
         ' <span style="cursor:pointer;color:#dc2626" onclick="removeLang(' + i + ')">&times;</span></span>';
@@ -603,10 +617,11 @@
     });
   }
 
-  // Display name for a language code, e.g. "French"; or
-  // just the code (fr) if it isn't a supported language.
+  // Display name for a language code, e.g. "French", including a language
+  // whose messages are incomplete; just the code (fr) for any other language.
   function langName(code) {
-    var name = (DATA.supportedLanguages || {})[code];
+    var name = (DATA.supportedLanguages || {})[code] ||
+      ((DATA.incompleteLanguages || {})[code] || {}).name;
     return escapeHtml(name ? name : code);
   }
 

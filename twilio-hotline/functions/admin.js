@@ -123,10 +123,14 @@ exports.handler = async function (context, event, callback) {
       }
 
       // The languages an admin may offer, as code -> display name, in list order.
-      const { langMap, supportedLanguages: supportedCodes } = require(Runtime.getAssets()['/language.js'].path);
+      const { langMap, supportedLanguages: supportedCodes, incompleteLanguages: incomplete } = require(Runtime.getAssets()['/language.js'].path);
       const supportedLanguages = Object.fromEntries(supportedCodes.map(code => [code, langMap[code].name]));
+      // Languages left out because their message file lacks some messages, as
+      // code -> { name, missing }, so the dashboard can say why.
+      const incompleteLanguages = Object.fromEntries(Object.entries(incomplete)
+        .map(([code, missing]) => [code, { name: langMap[code].name, missing }]));
 
-      resp.setBody({ operators, blocklist, languages, supportedLanguages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
+      resp.setBody({ operators, blocklist, languages, supportedLanguages, incompleteLanguages, hotlineName, connectionSequences, allowlistOnly, icsUrl, usage });
 
     } else if (event.action === 'list-sms') {
       // Twilio records inbound messages in the Messages log whether or not the
@@ -185,9 +189,15 @@ exports.handler = async function (context, event, callback) {
       resp.setBody({ ok: true });
 
     } else if (event.action === 'update-languages') {
-      // A language with no messages would crash the greeting for every caller.
+      // A language with no messages would crash the greeting for every caller,
+      // so only supported languages can be added. One already on the list is
+      // let through even if its messages have since become incomplete, so the
+      // admin can still change the rest of the list; the dashboard says what
+      // it lacks.
       const { supportedLanguages } = require(Runtime.getAssets()['/language.js'].path);
-      const unsupported = event.languages.filter(l => !supportedLanguages.includes(l));
+      const lv = vars.find(v => v.key === 'LANGUAGES');
+      const current = lv ? lv.value.split(',') : [];
+      const unsupported = event.languages.filter(l => !current.includes(l) && !supportedLanguages.includes(l));
       if (unsupported.length) {
         resp.setStatusCode(400);
         resp.setBody({ error: 'Not a supported language: ' + unsupported.join(', ') });

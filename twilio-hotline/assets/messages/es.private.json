@@ -1,4 +1,4 @@
-const es = {
+{
   "name": "la linea comunitaria",
   "caller": {
     "main": {
@@ -41,4 +41,3 @@ const es = {
     }
   }
 }
-module.exports = es;

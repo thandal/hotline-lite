@@ -66,27 +66,54 @@ const sayLangMap = function (twiml, lang2, message, phone = "") {
   }
 }
 
-// This is a helper function that loads the message files for the requested languages.
+// Each language's phone messages are in assets/messages/<code>.private.json,
+// which Twilio serves as the private asset /messages/<code>.json. Undefined
+// when the language has no message file.
+const messageFile = lang => Runtime.getAssets()[`/messages/${lang}.json`];
+
+// Loads the messages for the requested languages that have a message file.
 // It returns an object mapping language codes to the message objects.
 //
-// The message objects contain placeholders, filled in by the code that speaks each message:
-//   {hotline name}  the hotline's name in this language (HOTLINE_NAME, or `name` below)
+// The messages contain placeholders, filled in by the code that speaks each message:
+//   {hotline name}  the hotline's name in this language (HOTLINE_NAME, or the file's `name`)
 //   {key}           the key to press for this language in the language menu
 //   {caller name}   the name given to the caller's number in Special Call Handling
 //   {phone number}  the caller's phone number, read out digit by digit
 //
-// A language can be offered on the hotline only once it has every message
-// below (see supportedLanguages at the end of this file).
+// This loads a language even when its file lacks some messages, so a language
+// already on the hotline keeps answering calls if one of its messages is lost;
+// supportedLanguages below keeps such a language from being added.
 const loadMessages = function (languages) {
-  return Object.fromEntries(languages.map(lang => supportedLanguages.includes(lang) ?
-    [lang, require(Runtime.getAssets()[`/messages/${lang}.js`].path)] : null
-  ).filter(Boolean));
+  return Object.fromEntries(languages.filter(messageFile)
+    .map(lang => [lang, require(messageFile(lang).path)]));
 };
 
-// The languages the hotline can offer, in menu-list order: those with both a
-// locale above and a full set of messages. langMap also lists languages with
-// no messages yet, so the dashboard and the admin API check against this list.
-const supportedLanguages = Object.keys(langMap)
-  .filter(lang => Object.keys(Runtime.getAssets()).includes(`/messages/${lang}.js`));
+// The dotted path of every message in a messages object, e.g. "caller.wait.connecting".
+// Blank messages are left out, so they count as missing.
+const messagePaths = function (messages, prefix = '') {
+  return Object.entries(messages).flatMap(([key, value]) =>
+    value && typeof value === 'object' ? messagePaths(value, prefix + key + '.')
+      : typeof value === 'string' && value.trim() ? [prefix + key] : []);
+};
 
-module.exports = { langMap, sayAttrs, sayLangMap, loadMessages, formatE164, supportedLanguages };
+// The languages the hotline can offer, in menu-list order: those with a locale
+// above and a message file holding every message the English file has (English
+// is the reference, so en.private.json must exist). The dashboard and the admin
+// API only let an admin add languages from this list. A file missing messages
+// is left out, so a partial translation is never offered; it is logged as a
+// warning and listed in incompleteLanguages (code -> the missing messages'
+// paths), which the dashboard shows to admins.
+const englishPaths = messagePaths(loadMessages(['en']).en);
+const incompleteLanguages = {};
+const supportedLanguages = Object.keys(langMap).filter(lang => {
+  if (!messageFile(lang)) return false;
+  const paths = messagePaths(loadMessages([lang])[lang]);
+  const missing = englishPaths.filter(p => !paths.includes(p));
+  if (missing.length) {
+    incompleteLanguages[lang] = missing;
+    console.warn(`Not offering ${lang}: its message file lacks ${missing.join(', ')}`);
+  }
+  return missing.length == 0;
+});
+
+module.exports = { langMap, sayAttrs, sayLangMap, loadMessages, formatE164, supportedLanguages, incompleteLanguages };
