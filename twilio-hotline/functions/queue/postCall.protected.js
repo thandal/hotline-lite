@@ -1,6 +1,7 @@
 exports.handler = async function (context, event, callback) {
   //console.log("POSTCALL " + event.taskSid + " " + event.language + " " + event.callerFrom);
-  const { sayAttrs, sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const { sayAttrs, sayLangMap, loadMessages } = require(Runtime.getAssets()['/language.js'].path);
+  const messages = loadMessages([event.language])[event.language].operator.postcall;
   const twiml = new Twilio.twiml.VoiceResponse();
   if (!event.Digits) {
     const client = context.getTwilioClient();
@@ -22,7 +23,7 @@ exports.handler = async function (context, event, callback) {
     sayLangMap(
       gather,
       event.language,
-      messagesMap[event.language].operator.postcall.options,
+      messages.options,
       event.callerFrom
     );
   } else if (event.Digits == 1) {
@@ -30,7 +31,7 @@ exports.handler = async function (context, event, callback) {
     sayLangMap(
       twiml,
       event.language,
-      messagesMap[event.language].operator.postcall.callerNumber,
+      messages.callerNumber,
       event.callerFrom
     );
     twiml.redirect('');  // Redirects to the current URL
@@ -49,7 +50,7 @@ exports.handler = async function (context, event, callback) {
     sayLangMap(
       twiml,
       event.language,
-      messagesMap[event.language].operator.postcall.blocking,
+      messages.blocking,
       event.callerFrom
     );
   } else if (event.Digits == 3) {
@@ -57,7 +58,7 @@ exports.handler = async function (context, event, callback) {
     sayLangMap(
       twiml,
       event.language,
-      messagesMap[event.language].operator.postcall.callingBack,
+      messages.callingBack,
       event.callerFrom
     );
     twiml.dial(event.callerFrom);

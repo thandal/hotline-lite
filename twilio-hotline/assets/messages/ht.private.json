@@ -1,0 +1,43 @@
+{
+  "name": "liy asistans kominotè",
+  "caller": {
+    "main": {
+      "hello": "Mèsi paske w rele {hotline name}.",
+      "menu": "Pou Kreyòl Ayisyen, peze {key}.",
+      "goodbye": "Orevwa."
+    },
+    "wait": {
+      "connecting": "Yon moun pral reponn ou talè konsa.",
+      "leaveAMessage": "Tanpri rete sou liy lan oswa peze nenpòt bouton pou kite yon mesaj.",
+      "noOperator": {
+        "notice": "Dezole, pa gen okenn operatè ki pale kreyòl ki disponib.",
+        "options": {
+          "messageOrLanguage": "Pou chwazi yon lòt lang, peze 0 oswa peze nenpòt lòt bouton pou kite yon mesaj.",
+          "message": "Rete sou liy lan oswa peze nenpòt bouton pou kite yon mesaj.",
+          "language": "Peze 0 pou chwazi nenpòt lang."
+        }
+      }
+    },
+    "record": {
+      "prompt": "Tanpri kite yon mesaj aprè bip la."
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "Sa a se {hotline name} k ap rele w. Peze nenpòt bouton pou aksepte apèl la.",
+      "introNamed": "Sa a se {caller name} k ap rele w atravè {hotline name}. Peze nenpòt bouton pou aksepte apèl la.",
+      "noResponse": "Ou pa reponn, kidonk n ap pase apèl la bay yon lòt operatè. Se te {phone number} ki te rele w.",
+      "reservationStatus": {
+        "rescinded": "Yon lòt operatè te reponn apèl sa a.",
+        "canceled": "Moun ki t ap rele a te rakwoche.",
+        "default": "Yon lòt moun te reponn apèl la oswa moun ki t ap rele a te rakwoche."
+      }
+    },
+    "postcall": {
+      "options": "Apèl la fini. Peze 1 pou repete nimewo telefòn moun ki te rele a. Peze 2 pou bloke moun ki te rele a. Peze 3 pou rele moun nan ankò.",
+      "callerNumber": "Se {phone number} ki te rele w.",
+      "blocking": "Yo bloke apèl {phone number}.",
+      "callingBack": "Ap rele {phone number}."
+    }
+  }
+}

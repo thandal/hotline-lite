@@ -1,5 +1,6 @@
 exports.handler = async function (context, event, callback) {
-  const { sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const { sayLangMap, loadMessages } = require(Runtime.getAssets()['/language.js'].path);
+  const messages = loadMessages([event.language])[event.language];
   console.log("QueueResult " + event.QueueResult);
   const twiml = new Twilio.twiml.VoiceResponse();
   // The caller asked to leave a message, either by pressing 5 on hold, which
@@ -13,7 +14,7 @@ exports.handler = async function (context, event, callback) {
     sayLangMap(
       twiml,
       event.language,
-      messagesMap[event.language].caller.record.prompt
+      messages.caller.record.prompt
     );
     twiml.record({
       finishOnKey: '*#',
