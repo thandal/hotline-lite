@@ -1,7 +1,7 @@
 {
   "name": "የማህበረሰብ የስልክ መስመር",
   "caller": {
-    "welcome": {
+    "main": {
       "hello": "ወደ {hotline name} ስለደወሉልን እናመሰግናለን።",
       "menu": "ለአማርኛ {key}ን ይጫኑ።",
       "goodbye": "ደህና ሁኑ።"

@@ -1,13 +1,13 @@
 {
   "name": "đường dây nóng cộng đồng",
   "caller": {
-    "welcome": {
-      "hello": "Cám ơn bạn đã gọi đến {hotline name}.",
+    "main": {
+      "hello": "Cảm ơn bạn đã gọi tới {hotline name}.",
       "menu": "Nhấn phím {key} để chọn tiếng Việt.",
       "goodbye": "Tạm biệt."
     },
     "wait": {
-      "connecting": "Sẽ có người đến giúp bạn ngay đây.",
+      "connecting": "Sẽ có người tới giúp bạn ngay đây.",
       "leaveAMessage": "Vui lòng giữ máy hoặc nhấn bất kỳ phím nào để gửi lại lời nhắn.",
       "noOperator": {
         "notice": "Rất tiếc, hiện tại không có tổng đài viên nói tiếng Việt.",
@@ -25,8 +25,8 @@
   "operator": {
     "precall": {
       "intro": "Đây là cuộc gọi từ {hotline name}. Vui lòng nhấn bất kỳ phím nào để nhận cuộc gọi.",
-      "introNamed": "Đây là cuộc gọi từ {caller name}, qua {hotline name}. Vui lòng nhấn bất kỳ phím nào để nhận cuộc gọi.",
-      "noResponse": "Bạn không trả lời nên chúng tôi sẽ chuyển sang tổng đài viên khác. Cuộc gọi này đến từ {phone number}.",
+      "introNamed": "Đây là cuộc gọi từ {caller name}, qua {hotline name}. Nhấn phím bất kỳ để nhận cuộc gọi.",
+      "noResponse": "Bạn không trả lời nên chúng tôi sẽ chuyển sang tổng đài viên khác. Cuộc gọi này tới từ {phone number}.",
       "reservationStatus": {
         "rescinded": "Tổng đài viên khác đã nhận cuộc gọi này.",
         "canceled": "Người gọi đã cúp máy.",
@@ -35,7 +35,7 @@
     },
     "postcall": {
       "options": "Cuộc gọi đã kết thúc. Nhấn phím 1 để nhắc lại số điện thoại người gọi. Nhấn phím 2 để thêm người gọi vào danh sách chặn. Nhấn phím 3 để gọi lại cho người gọi.",
-      "callerNumber": "Cuộc gọi này đến từ {phone number}.",
+      "callerNumber": "Cuộc gọi này tới từ {phone number}.",
       "blocking": "Chặn cuộc gọi từ {phone number}.",
       "callingBack": "Đang gọi {phone number}."
     }

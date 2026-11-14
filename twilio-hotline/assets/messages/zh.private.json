@@ -1,7 +1,7 @@
 {
   "name": "社区热线",
   "caller": {
-    "welcome": {
+    "main": {
       "hello": "感谢您致电 {hotline name}。",
       "menu": "如需普通话服务，请按 {key}。",
       "goodbye": "再见。"

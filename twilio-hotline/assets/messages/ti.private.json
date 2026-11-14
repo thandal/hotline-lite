@@ -1,7 +1,7 @@
 {
   "name": "ናይ ሕብረተሰብ መስመር ሓገዝ",
   "caller": {
-    "welcome": {
+    "main": {
       "hello": "ናብ {hotline name} ስለ ዝደወልኩም ነመስግን",
       "menu": "እንግሊዝኛ ንምምራጽ {key} ጠውቕ።",
       "goodbye": " ደሓን ኩኑ"

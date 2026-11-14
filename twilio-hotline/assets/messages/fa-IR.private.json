@@ -1,7 +1,7 @@
 {
   "name": "خط تماس جامعه",
   "caller": {
-    "welcome": {
+    "main": {
       "hello": "از تماس با {hotline name} سپاسگزاریم.",
       "menu": "برای فارسی، کلید {key} را فشار دهید.",
       "goodbye": "خداحافظ."

@@ -1,7 +1,7 @@
 {
   "name": "liy asistans kominotè",
   "caller": {
-    "welcome": {
+    "main": {
       "hello": "Mèsi paske w rele {hotline name}.",
       "menu": "Pou Kreyòl Ayisyen, peze {key}.",
       "goodbye": "Orevwa."

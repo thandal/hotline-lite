@@ -1,7 +1,7 @@
 {
   "name": "a central de atendimento da comunidade",
   "caller": {
-    "welcome": {
+    "main": {
       "hello": "Obrigado por ligar para {hotline name}.",
       "menu": "Digite {key} para português.",
       "goodbye": "Até logo."
