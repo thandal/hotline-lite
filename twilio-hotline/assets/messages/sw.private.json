@@ -1,0 +1,43 @@
+{
+  "name": "huduma ya simu ya jamii",
+  "caller": {
+    "main": {
+      "hello": "Asante kwa kupiga simu kwa {hotline name}.",
+      "menu": "Bonyeza {key} ili kuchagua Kiswahili.",
+      "goodbye": "Kwaheri."
+    },
+    "wait": {
+      "connecting": "Kuna mtu atakayekujibu baada ya muda mfupi.",
+      "leaveAMessage": "Tafadhali endelea kusubiri kwenye simu, au bonyeza kitufe chochote ili kuacha ujumbe.",
+      "noOperator": {
+        "notice": "Samahani, kwa sasa hakuna wahudumu wanaozungumza Kiswahili wanaopatikana.",
+        "options": {
+          "messageOrLanguage": "Bonyeza 0 ili kuchagua lugha nyingine, au bonyeza kitufe kingine chochote ili kuacha ujumbe.",
+          "message": "Endelea kusubiri kwenye simu, au bonyeza kitufe chochote ili kuacha ujumbe.",
+          "language": "Bonyeza 0 ili kuchagua lugha nyingine."
+        }
+      }
+    },
+    "record": {
+      "prompt": "Tafadhali acha ujumbe baada ya mlio."
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "Hii ni simu kutoka {hotline name}. Bonyeza kitufe chochote ili kupokea simu.",
+      "introNamed": "Hii ni simu kutoka kwa {caller name} kupitia {hotline name}. Bonyeza kitufe chochote ili kupokea simu.",
+      "noResponse": "Hukujibu, kwa hiyo tunaendelea na mhudumu mwingine. Simu hii ilitoka kwa nambari {phone number}.",
+      "reservationStatus": {
+        "rescinded": "Mhudumu mwingine amepokea simu hii.",
+        "canceled": "Mpigaji simu amekata simu.",
+        "default": "Mtu mwingine amepokea simu, au mpigaji simu amekata simu."
+      }
+    },
+    "postcall": {
+      "options": "Simu imekamilika. Bonyeza 1 ili kurudia nambari ya mpigaji simu. Bonyeza 2 ili kuongeza nambari ya mpigaji simu kwenye orodha ya nambari zilizozuiwa. Bonyeza 3 ili kumpigia mpigaji simu tena.",
+      "callerNumber": "Simu hii ilitoka kwa nambari {phone number}.",
+      "blocking": "Inazuia simu kutoka kwa nambari {phone number}.",
+      "callingBack": "Inapiga simu kwa nambari {phone number}."
+    }
+  }
+}

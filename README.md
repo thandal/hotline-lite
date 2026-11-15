@@ -152,7 +152,7 @@ Once you have created a WhatsApp Sender for the number, you must also create a <
 | Tigrinya       	| ✅ | ❌ | ❌ |
 | Amharic        	| ✅ | ❌ | ❌ |
 | Nepali         	| ✅ | ❌ | ❌ |
-| Swahili        	| ❌ | ❌ | ❌ |
+| Swahili        	| ✅ | ❌ | ❌ |
 | Kinyarwanda    	| ❌ | ❌ | ❌ |
 | Kurdish        	| ❌ | ❌ | ❌ |
 
