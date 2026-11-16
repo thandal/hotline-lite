@@ -1,5 +1,6 @@
 exports.handler = function (context, event, callback) {
-  const { sayLangMap, messagesMap } = require(Runtime.getAssets()['/language.js'].path);
+  const { sayLangMap, loadMessages } = require(Runtime.getAssets()['/language.js'].path);
+  const messages = loadMessages([event.language])[event.language].caller.wait;
   // Voice memos are delivered over Signal; without an active group (GROUP_KEY)
   // a recording would go nowhere, so don't offer to take one.
   const signalConfigured = !!context.GROUP_KEY;
@@ -8,11 +9,11 @@ exports.handler = function (context, event, callback) {
   if (!event.Digits) {
     if (signalConfigured) {
       const gather = twiml.gather({ numDigits: 1 })
-      sayLangMap(gather, event.language, messagesMap[event.language].caller.wait.connecting);
+      sayLangMap(gather, event.language, messages.connecting);
       gather.pause({ length: 2 });
-      sayLangMap(gather, event.language, messagesMap[event.language].caller.wait.leaveAMessage);
+      sayLangMap(gather, event.language, messages.leaveAMessage);
     } else {
-      sayLangMap(twiml, event.language, messagesMap[event.language].caller.wait.connecting);
+      sayLangMap(twiml, event.language, messages.connecting);
       twiml.pause({ length: 2 });
     }
   } else if (event.Digits == 5 && signalConfigured) {

@@ -1,0 +1,43 @@
+{
+  "name": "the community hotline",
+  "caller": {
+    "main": {
+      "hello": "Thank you for calling {hotline name}.",
+      "menu": "Press {key} for English.",
+      "goodbye": "Goodbye."
+    },
+    "wait": {
+      "connecting": "Someone will be with you shortly.",
+      "leaveAMessage": "Please remain on the line, or press any key to leave a message.",
+      "noOperator": {
+        "notice": "Sorry, no English-speaking operators are available.",
+        "options": {
+          "messageOrLanguage": "Press 0 to choose another language, or press any other key to leave a message.",
+          "message": "Remain on the line to leave a message.",
+          "language": "Press 0 to choose another language."
+        }
+      }
+    },
+    "record": {
+      "prompt": "Please leave a message after the tone."
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "This is a call from {hotline name}. Press any key to accept the call.",
+      "introNamed": "This is a call from {caller name}, through {hotline name}. Press any key to accept the call.",
+      "noResponse": "You didn't respond, so we're moving on to another operator. This call was from {phone number}.",
+      "reservationStatus": {
+        "rescinded": "Another operator answered this call.",
+        "canceled": "The caller hung up.",
+        "default": "Someone else answered or the caller hung up."
+      }
+    },
+    "postcall": {
+      "options": "Call finished. Press 1 to repeat the caller's number. Press 2 to add the caller to the blocklist. Press 3 to call the caller back.",
+      "callerNumber": "This call was from {phone number}.",
+      "blocking": "Blocking calls from {phone number}.",
+      "callingBack": "Calling {phone number}."
+    }
+  }
+}
