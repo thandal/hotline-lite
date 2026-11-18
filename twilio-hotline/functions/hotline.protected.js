@@ -1,13 +1,15 @@
 
 exports.handler = async function (context, event, callback) {
-  const { sayAttrs, sayLangMap, loadMessages } = require(Runtime.getAssets()['/language.js'].path);
+  const { sayAttrs, sayLangMap, loadMessages, renderCallMessage } = require(Runtime.getAssets()['/language.js'].path);
   const { updateWorkers } = require(Runtime.getAssets()['/updateWorkers.js'].path);
   // LANGUAGES is dashboard-managed and may be unset on a fresh install (before an
   // admin configures one) or cleared to empty; fall back to a default so the
   // greeting still works, mirroring the guards on BLOCKLIST/CONNECTION_SEQUENCES below.
   const languages = (context.LANGUAGES || 'es,en').split(',');
   const messages = loadMessages(languages);
-  const hotlineName = (context.HOTLINE_NAME) ? context.HOTLINE_NAME.split(',') : languages.map(x => messages[x].name);
+  const hotlineNames = (context.HOTLINE_NAME || '').split(',');
+  const greeting = lang => renderCallMessage(messages[lang].caller.main.hello,
+    hotlineNames[languages.indexOf(lang)] || messages[lang].name);
   const twiml = new Twilio.twiml.VoiceResponse();
 
   // Special call handling. Callers arriving through a collect-call gateway need
@@ -76,12 +78,7 @@ exports.handler = async function (context, event, callback) {
     for (let n = 0; n < 2; n++) {
       for (let i = 0; i < languages.length; i++) {
         const key = String(i + 1);
-        var intro = messages[languages[i]].caller.main.hello.replace('{hotline name}', hotlineName[i]);
-        if (["uk", "ru"].includes(languages[i])) {
-          // Ukrainian and Russian nouns indicate grammatical case. We add the hotline name in accusative case here.
-          intro = intro.replace('{hotline name:acc}', localizedName.acc);
-        }
-        gather.say(sayAttrs(languages[i]), intro);
+        gather.say(sayAttrs(languages[i]), greeting(languages[i]));
         sayLangMap(
           gather,
           languages[i],
@@ -108,7 +105,7 @@ exports.handler = async function (context, event, callback) {
     if (skipMenu) {
       key = presetLanguage || languages[0];
       // No menu, so this is the caller's only greeting.
-      twiml.say(sayAttrs(key), messages[key].caller.main.hello.replace('{hotline name}', hotlineName[languages.indexOf(key)]));
+      twiml.say(sayAttrs(key), greeting(key));
     } else {
       // NOTE: the dialing instructions in greetingMap *must* be in the order 1, 2, 3, ...
       key = languages[event.Digits - 1];  // zero-indexed

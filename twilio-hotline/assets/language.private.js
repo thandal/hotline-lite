@@ -30,7 +30,7 @@ const langMap = {
   // no compatible voice identified - rw: { locale: 'rw-RW', name: 'Kinyarwanda' }, // will Google.rw-RW-Wavenet-A work?
   // no compatible voice identified - sw: { locale: 'sw-KE', name: 'Swahili' }, // will Google.sw-KE-Wavenet-A work?
   // no compatible voice identified - ti: { locale: 'ti-ET', name: 'Tigrinya' }, // will Google.ti-ET-Wavenet-A work?
-  uk: { locale: 'uk-UA', name: 'Ukrainian', voice: 'uk-UA-Chirp3-HD-Achernar' }, // No Ukrainina Neural voice, so using Google Generative voice (Chirp3-HD) instead of Polly Standard voice
+  uk: { locale: 'uk-UA', name: 'Ukrainian', voice: 'Google.uk-UA-Chirp3-HD-Achernar' },
   vi: { locale: 'vi-VN', name: 'Vietnamese', voice: 'Google.vi-VN-Wavenet-A' },
   zh: { locale: 'zh-CN', name: 'Mandarin', voice: 'Polly.Zhiyu-Neural' },
 };
@@ -76,7 +76,7 @@ const messageFile = lang => Runtime.getAssets()[`/messages/${lang}.json`];
 // It returns an object mapping language codes to the message objects.
 //
 // The messages contain placeholders, filled in by the code that speaks each message:
-//   {hotline name}  the hotline's name in this language (HOTLINE_NAME, or the file's `name`)
+//   {hotline name}, {hotline name:nom}, {hotline name:acc}  the hotline's name
 //   {key}           the key to press for this language in the language menu
 //   {caller name}   the name given to the caller's number in Special Call Handling
 //   {phone number}  the caller's phone number, read out digit by digit
@@ -86,7 +86,15 @@ const messageFile = lang => Runtime.getAssets()[`/messages/${lang}.json`];
 // supportedLanguages below keeps such a language from being added.
 const loadMessages = function (languages) {
   return Object.fromEntries(languages.filter(messageFile)
-    .map(lang => [lang, require(messageFile(lang).path)]));
+    .map(lang => [lang, JSON.parse(messageFile(lang).open())]));
+};
+
+// A configured hotline name is a single string and fills all grammatical forms.
+const renderCallMessage = function (message, hotlineName, callerName) {
+  return message.replace(/\{(hotline name|caller name)(?::(nom|acc))?\}/g, (placeholder, key, form) => {
+    if (key === 'caller name') return callerName ?? placeholder;
+    return typeof hotlineName === 'string' ? hotlineName : hotlineName?.[form] ?? hotlineName?.nom ?? hotlineName?.acc ?? '';
+  });
 };
 
 // The dotted path of every message in a messages object, e.g. "caller.wait.connecting".
@@ -100,21 +108,17 @@ const messagePaths = function (messages, prefix = '') {
 // The languages the hotline can offer, in menu-list order: those with a locale
 // above and a message file holding every message the English file has (English
 // is the reference, so en.private.json must exist). The dashboard and the admin
-// API only let an admin add languages from this list. A file missing messages
-// is left out, so a partial translation is never offered; it is logged as a
-// warning and listed in incompleteLanguages (code -> the missing messages'
-// paths), which the dashboard shows to admins.
-const englishPaths = messagePaths(loadMessages(['en']).en);
+// API only let an admin add languages from this list. The dashboard shows
+// incompleteLanguages, which maps each excluded language to its missing paths.
+const englishMessagePaths = messagePaths(loadMessages(['en']).en).filter(p => p !== 'name');
 const incompleteLanguages = {};
 const supportedLanguages = Object.keys(langMap).filter(lang => {
   if (!messageFile(lang)) return false;
   const paths = messagePaths(loadMessages([lang])[lang]);
-  const missing = englishPaths.filter(p => !paths.includes(p));
-  if (missing.length) {
-    incompleteLanguages[lang] = missing;
-    console.warn(`Not offering ${lang}: its message file lacks ${missing.join(', ')}`);
-  }
+  const namePaths = ['ru', 'uk'].includes(lang) ? ['name.nom', 'name.acc'] : ['name'];
+  const missing = [...namePaths, ...englishMessagePaths].filter(p => !paths.includes(p));
+  if (missing.length) incompleteLanguages[lang] = missing;
   return missing.length == 0;
 });
 
-module.exports = { langMap, sayAttrs, sayLangMap, loadMessages, formatE164, supportedLanguages, incompleteLanguages };
+module.exports = { langMap, sayAttrs, sayLangMap, loadMessages, renderCallMessage, formatE164, supportedLanguages, incompleteLanguages };
