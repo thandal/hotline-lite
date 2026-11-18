@@ -96,6 +96,10 @@ exports.handler = async function (context, event, callback) {
       const icsUrl = iv ? iv.value : '';
       const arv = vars.find(v => v.key === 'AUTORESPONDER_MESSAGE');
       const autoresponderMessage = arv ? arv.value : '';
+      let obj = vars.find(v => v.key === 'WAIT_MESSAGES');
+      let waitMessages = {};
+      if (obj && Object.keys(obj).length) { try { waitMessages = JSON.parse(obj.value); } catch { waitMessages = []; } }
+      if (typeof waitMessages !== 'object' || Array.isArray(waitMessages) || waitMessages === null) waitMessages = [];
 
       // Usage summary for the dashboard. Isolated so a usage-API failure leaves
       // the rest of the status payload intact. The base records resource defaults
@@ -224,6 +228,21 @@ exports.handler = async function (context, event, callback) {
         await env.variables(v.sid).update({ value });
       } else {
         await env.variables.create({ key: 'HOTLINE_NAME', value });
+      }
+      resp.setBody({ ok: true });
+
+    } else if (event.action === 'update-wait-messages') {
+      // A language-indexed WAIT_MESSAGES is read as one message per language, in
+      // LANGUAGES order (see hotline.protected.js). An empty list clears the var
+      const waitMessages = event.waitMessages || [];
+      const value = JSON.stringify(waitMessages);
+      const v = vars.find(v => v.key === 'WAIT_MESSAGES');
+      if (!waitMessages) {
+        if (v) await env.variables(v.sid).remove();
+      } else if (v) {
+        await env.variables(v.sid).update({ value });
+      } else {
+        await env.variables.create({ key: 'WAIT_MESSAGES', value });
       }
       resp.setBody({ ok: true });
 
