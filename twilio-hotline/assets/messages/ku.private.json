@@ -1,0 +1,43 @@
+{
+  "name": "xeta telefonê ya civakê",
+  "caller": {
+    "main": {
+      "hello": "Spas ji bo têkiliya bi {hotline name} re.",
+      "menu": "Ji bo Îngilîzî, pêl nimra {key} bikin.",
+      "goodbye": "Bi xatirê we."
+    },
+    "wait": {
+      "connecting": "Kesek dê di demek kurt de bi we re be.",
+      "leaveAMessage": "Ji kerema xwe li ser xetê bimînin, an jî ji bo şandina peyamekê pêl nimreyekê bikin.",
+      "noOperator": {
+        "notice": "Biborin, operatorên ku bi Kurdî diaxivin tune ne.",
+        "options": {
+          "messageOrLanguage": "Ji bo hilbijartina zimanekî din, pêl 0ê bikin; an jî ji bo şandina peyamekê pêl nimreyekê din bikin.",
+          "message": "Li ser xetê bimînin an jî ji bo şandina peyamekê pêl nimreyekê bikin.",
+          "language": "Ji bo hilbijartina zimanekî din, pêl 0ê bikin."
+        }
+      }
+    },
+    "record": {
+      "prompt": "Ji kerema xwe, piştî dengê sînyalê peyamekê bişînin."
+    }
+  },
+  "operator": {
+    "precall": {
+      "intro": "Ev bang ji {hotline name} ye. Ji bo qebûlkirina bangê, pêl nimreyekê bikin.",
+      "introNamed": "Ev bangek e ji aliyê {caller name} ve, bi rêya {hotline name}. Ji bo qebûlkirina bangê, pêl nimrê bikin.",
+      "noResponse": "We bersiv neda, lewma em derbasî operatora din dibin. Ev bang ji {phone number} hatibû kirin.",
+      "reservationStatus": {
+        "rescinded": "Operatorek din bersiva vê bangê da.",
+        "canceled": "Kesê ku telefon kiribû, telefon girt.",
+        "default": "Kesek din bersiv da, an jî kesê ku telefon dikir telefon girt."
+      }
+    },
+    "postcall": {
+      "options": "Bang qediya. Ji bo dubarekirina hejmara bangker, pêl 1ê bikin. Ji bo zêdekirina bangker bo lîsteya astengkirinê, pêl 2yê bikin. Ji bo telefonkirina bangker, pêl 3yê bikin.",
+      "callerNumber": "Ev bang ji {phone number} hatibû.",
+      "blocking": "Astengkirina bangên ji {phone number}.",
+      "callingBack": "Bangkirina {phone number}."
+    }
+  }
+}
