@@ -14,13 +14,16 @@
 // natural output. Languages with no voice in their own language (ht, ku, ti,
 // sw, uk, rw, ru, am, fa, vi) are left to the locale default rather than being
 // read aloud by a voice from an unrelated language.
+//
+// As of November 2026, Twilio Say verbs are limited to the following languages:
+// arb,cmn-cn,da-dk,nl-nl,en-au,en-gb,en-in,en-nz,en-us,en-za,en-gb-wls,fr-fr,fr-ca,de-de,hi-in,is-is,it-it,ja-jp,ko-kr,nb-no,pl-pl,pt-br,pt-pt,ro-ro,ru-ru,es-es,es-mx,es-us,sv-se,tr-tr,cy-gb
 const langMap = {
   // no compatible voice identified - am: { locale: 'am-ET', name: 'Amharic' }, // will Google.am-ET-Wavenet-A work?
-  ar: { locale: 'ar-IQ', name: 'Arabic', voice: 'Polly.Hala-Neural' }, // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
+  ar: { locale: 'arb', name: 'Arabic', voice: 'Polly.Hala-Neural' }, // ar-AE (Gulf Arabic; nearest neural voice to ar-IQ)
   en: { locale: 'en-US', name: 'English', voice: 'Polly.Joanna-Neural' },
   es: { locale: 'es-MX', name: 'Spanish', voice: 'Polly.Mia-Neural' },
-  fa_af: { locale: 'fa-AF', name: 'Dari' }, // Distinct from Farsi (fa-IR); will Polly.Hala-Neural work?
-  fa_ir: { locale: 'fa-IR', name: 'Farsi' }, // Distinct from Dari (fa-AF); will Polly.Hala-Neural work?
+  // no compatible voice identified - fa_af: { locale: 'fa-AF', name: 'Dari' }, // Distinct from Farsi (fa-IR); will Polly.Hala-Neural work?
+  // no compatible voice identified - fa_ir: { locale: 'fa-IR', name: 'Farsi' }, // Distinct from Dari (fa-AF); will Polly.Hala-Neural work?
   fr: { locale: 'fr-FR', name: 'French', voice: 'Polly.Lea-Neural' },
   // no compatible voice identified - ht: { locale: 'ht-HT', name: 'Haitian Creole' }, // will Google.ht-HT-Wavenet-A work?
   // no compatible voice identified - ku: { locale: 'ku-IQ', name: 'Kurdish' }, // will Google.ku-IQ-Wavenet-A work?

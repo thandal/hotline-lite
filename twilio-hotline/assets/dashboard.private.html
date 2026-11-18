@@ -150,15 +150,6 @@
 </div>
 
 <div class="card">
-  <h2>Blocklist</h2>
-  <div id="blockList"></div>
-  <div class="row">
-    <input id="bNum" placeholder="+12025551234">
-    <button onclick="addBlock()">Block</button>
-  </div>
-</div>
-
-<div class="card">
   <h2>Special Call Handling</h2>
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     Some callers arrive through a collect-call gateway that must be sent a key sequence before the caller is connected.
@@ -208,10 +199,7 @@
     <input id="lCode" placeholder="fr">
     <button onclick="addLang()">Add</button>
   </div>
-</div>
-
-<div class="card">
-  <h2>Hotline Name</h2>
+  <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:36px 0 6px">Hotline Name</h3>
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     The name spoken in the phone greeting. Set one name per language, in the same order as Languages above.
     Leave every field blank to use the built-in default names.
@@ -219,6 +207,13 @@
   <div id="nameList"></div>
   <div class="row">
     <button onclick="saveHotlineName(this)">Save</button>
+  </div>
+<div class="card">
+  <h2>Blocklist</h2>
+  <div id="blockList"></div>
+  <div class="row">
+    <input id="bNum" placeholder="+12025551234">
+    <button onclick="addBlock()">Block</button>
   </div>
 </div>
 
