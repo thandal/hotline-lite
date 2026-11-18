@@ -137,15 +137,14 @@ async function statusBundle(context) {
 // number is interpolated from `HOTLINE_PHONE_NUMBER` (the same env var used
 // for outbound SMS in queue/assignment.protected.js).
 function autoReplyMessage(context) {
-  const phone = (context.HOTLINE_PHONE_NUMBER || '').trim();
-  const callTo = phone ? ` at ${phone}` : '';
-  return `Hi! This account is automated and only sends hotline notifications. To reach a human, please call the hotline directly${callTo}.`;
+  return context.AUTORESPONDER_MESSAGE.trim() || false;
 }
 
 async function listGroups(context) {
   const reply = autoReplyMessage(context);
   const { result } = await withDb(context, {}, ({ exec }) => {
-    exec('sync', '--stop-after-empty-queue', '--auto-reply', reply);
+    if (reply) { exec('sync', '--stop-after-empty-queue', '--auto-reply', reply); }
+    else { exec('sync', '--stop-after-empty-queue'); }
     return exec('list-groups');
   });
   return splitGroupLines(result);

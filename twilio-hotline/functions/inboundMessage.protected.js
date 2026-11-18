@@ -20,8 +20,10 @@ exports.handler = async function (context, event, callback) {
   const blocklist = (!context.BLOCKLIST || context.BLOCKLIST === 'null')
     ? [] : context.BLOCKLIST.split(',').filter(Boolean);
 
+  // If the sender is on the blocklist, or if we're in allowlist-only mode
+  // and the sender isn't on the allowlist, we ignore the message.
   if (blocklist.includes(sender) || (allowlistOnly && !callerSequence)) {
-    console.log('Ignoring message from blocked or unallowed number', sender);
+    console.log('Ignoring message from blocked or unallowed number:', sender);
     return callback(null, '');
   }
 
@@ -29,7 +31,7 @@ exports.handler = async function (context, event, callback) {
   // Instead, we just log it and return a success response.
   const pattern = /code[^0-9]{0,40}((\d{3})[-\s]?(\d{3})|(\d{4}))/i;
   if (pattern.test(event.Body)) {
-    console.log('Ignoring confirmation code message', event.From);
+    console.log('Ignoring confirmation code message from:', event.From);
     return callback(null, '');
   }
 
@@ -49,16 +51,17 @@ exports.handler = async function (context, event, callback) {
       let filename = `${crypto.randomUUID()}_attachment_${i + 1}.${extension}`;
       mediaUrls.push({ url: event[`MediaUrl${i}`], contentType: contentType, filename: filename });
     }
-
   }
 
   const { notify, prepareAttachment } = require(Runtime.getAssets()['/notify.js'].path);
   const { formatE164 } = require(Runtime.getAssets()['/language.js'].path);
+
+  // Prepare the message to send to the group chat, including any media attachments.
   const messageType = event.To.includes('whatsapp') ? 'WhatsApp' : 'SMS';
-  let senderText = formatE164(sender);
-  senderText += event.From.includes('whatsapp') && event.ProfileName ? ' (~' + event.ProfileName + ')' : '';
+  let senderId = formatE164(sender);
+  senderId += event.From.includes('whatsapp') && event.ProfileName ? ' (~' + event.ProfileName + ')' : '';
   const attachmentText = mediaUrls.length > 0 ? ` with ${mediaUrls.length} attachment(s)` : '';
-  let messageBody = event.Body + "\n\n---\n" + messageType + " from " + senderText + attachmentText;
+  let messageBody = event.Body + "\n\n---\n" + messageType + " from " + senderId + attachmentText;
 
   // If an attachment can't be fetched or sent, send the text without it plus a
   // note, so the group still learns the message arrived and can look it up.
@@ -76,12 +79,36 @@ exports.handler = async function (context, event, callback) {
 
   if (mediaUrls.length > 0) await notifyWithAttachment(messageBody, mediaUrls[0]);
   else await notify(context, messageBody);
-  for (const media of mediaUrls.slice(1)) await notifyWithAttachment('', media);
+  for (const media of mediaUrls.slice(1)) await notifyWithAttachment(
+    "Attachment " + (mediaUrls.indexOf(media) + 1) + " of " + mediaUrls.length + " from " + senderId, 
+    media
+  );
 
   // Wait a moment to ensure the message is sent before returning.
   // This is a workaround for Twilio runtime errors that can occur 
   // if the function returns too quickly.
   await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const autoresponderMessage = context.AUTORESPONDER_MESSAGE.trim() || false;
+  // If an autoresponder message isn't configured, we don't want to send anything to the sender. 
+  // If it is configured, we want to send that message to the sender, but only
+  // if they haven't received a message from the hotline in the last 7 days.
+  if (autoresponderMessage) {
+    const recentOutboundMessages = await twilioClient.messages.list({ 
+      from: event.To, 
+      dateSentAfter: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) });
+    recentRecipients = [...new Set(recentOutboundMessages.map(m => m.to))];
+    console.log('Recent recipients of messages from', event.To, 'in the last 7 days:', recentRecipients);
+    if (!recentRecipients.includes(event.From)) {
+      await twilioClient.messages.create({
+        from: event.To,
+        to: event.From,
+        body: autoresponderMessage
+      });
+      console.log('Sent autoresponder message from', event.To, 'to', event.From, 'with body:', autoresponderMessage);
+    }
+  }
+
   return callback(null, '');
 
 }

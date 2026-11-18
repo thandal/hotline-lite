@@ -34,8 +34,18 @@ in the deployment process.
 ### Caller Experience
 When a Caller reaches the hotline, they will be greeted in the hotline's languages and asked to select their desired language by pressing a number. 
 They will then be placed in a wait queue while the system finds an available operator.
-They will periodically hear updates while waiting. If voicemail is enabled, they will have the option to leave a message.
-If no operator on call speaks their chosen language, the caller is told so and given the option to leave a message (if voicemail is enabled) or select a second language.
+
+If no operator on call speaks their chosen language, the caller is told so. 
+They are then given the option to select a different language, or to leave a message if voicemail is enabled.
+
+While a caller waits for an operator to answer, they hear a repeating sequence of wait messages in their chosen language.
+If voicemail is enabled, the caller will have the option to leave a message.
+
+#### Custom Wait Messages
+
+An optional, custom wait message can be configured for each language in the admin dashboard. This message
+can be a phrase to be voiced by a text-to-speech engine, or a url to an `.mp3` or `.wav` file that will be played
+before the wait sequence repeats.
 
 ### Operator Experience
 When a Caller is added to the wait queue, active Operators (called Workers in the Twilio task scheduling system) who speak the Caller's selected language will receive a call from the hotline number.

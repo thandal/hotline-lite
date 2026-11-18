@@ -150,15 +150,6 @@
 </div>
 
 <div class="card">
-  <h2>Blocklist</h2>
-  <div id="blockList"></div>
-  <div class="row">
-    <input id="bNum" placeholder="+12025551234">
-    <button onclick="addBlock()">Block</button>
-  </div>
-</div>
-
-<div class="card">
   <h2>Special Call Handling</h2>
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     Some callers arrive through a collect-call gateway that must be sent a key sequence before the caller is connected.
@@ -208,10 +199,7 @@
     <input id="lCode" placeholder="fr">
     <button onclick="addLang()">Add</button>
   </div>
-</div>
-
-<div class="card">
-  <h2>Hotline Name</h2>
+  <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:36px 0 6px">Hotline Name</h3>
   <p style="font-size:13px;color:#555;margin-bottom:8px">
     The name spoken in the phone greeting. Set one name per language, in the same order as Languages above.
     Leave every field blank to use the built-in default names.
@@ -219,6 +207,14 @@
   <div id="nameList"></div>
   <div class="row">
     <button onclick="saveHotlineName(this)">Save</button>
+  </div>
+
+<div class="card">
+  <h2>Blocklist</h2>
+  <div id="blockList"></div>
+  <div class="row">
+    <input id="bNum" placeholder="+12025551234">
+    <button onclick="addBlock()">Block</button>
   </div>
 </div>
 
@@ -278,6 +274,20 @@
     </div>
     <div class="row">
       <button onclick="sendMessage(this)">Send to group</button>
+    </div>
+
+    <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Autoresponder</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:8px">
+      Send an automatic text reply to every incoming SMS, WhatsApp, and Signal direct message 
+      if the sender isn't on the block list and they haven't been sent a message in the past 7 days. 
+      Leave blank to disable. <span style="color:#aaa;font-style:italic;">(In order to send SMS and WhatsApp messages, you must file a 
+      <a style="color:#aaa;" href="https://www.twilio.com/docs/trust-hub/profiles/primary-compliance-profiles" target="_blank">compliance profile</a> with Twilio.)</span>
+    </p>
+    <div class="row">
+      <input id="autoresponderMessage" placeholder="" autocomplete="off">
+    </div>
+    <div class="row">
+      <button onclick="saveAutoresponder(this)">Save</button>
     </div>
 
     <h3 style="font-size:13px;color:#888;text-transform:uppercase;margin:16px 0 6px">Keystore import / export</h3>
@@ -491,6 +501,7 @@
     $('sLang').innerHTML = seqLanguageOptions($('sLang').value);
     if ($('allowlistOnly')) $('allowlistOnly').checked = !!DATA.allowlistOnly;
     if ($('icsUrl')) $('icsUrl').value = DATA.icsUrl || '';
+    if ($('autoresponderMessage')) $('autoresponderMessage').value = DATA.autoresponderMessage || '';
 
     renderUsage();
   }
@@ -861,6 +872,21 @@
       return api({ action: 'update-ics-url', icsUrl: url })
         .then(reloadStatus)
         .catch(catcher('Save calendar'));
+    });
+  };
+
+  window.saveAutoresponder = function (btn) {
+    var message = $('autoresponderMessage').value.trim();
+      // Clearing the feed leaves worker sync with nothing to fetch, which breaks
+    // the on-call schedule — confirm before removing it.
+    if (!message && DATA.autoresponderMessage &&
+        !confirm('Clear the autoresponder message? Incoming messages will receive no response.')) {
+      return;
+    }
+    withButton(btn, 'Saving...', function () {
+      return api({ action: 'update-autoresponder', autoresponderMessage: message })
+        .then(reloadStatus)
+        .catch(catcher('Save autoresponder message'));
     });
   };
 

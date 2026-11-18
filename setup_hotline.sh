@@ -86,7 +86,7 @@ set_env_var "HOTLINE_PHONE_NUMBER" "$PHONE_NUMBER"
 echo "Using $PHONE_NUMBER"
 
 echo Initially deploying service...
-(cd twilio-hotline; twilio serverless:deploy)
+(cd twilio-hotline; twilio serverless:deploy --override-existing-project)
 
 #echo SERVICE friendly name: $SERVICE_FRIENDLY_NAME
 SERVICE_SID=`twilio api:serverless:v1:services:list | grep " $SERVICE_FRIENDLY_NAME " | awk '{ print $1 }'`
